@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.ihtsdo.mysnow.importsct_impl
+OpenIDE-Module-Localizing-Bundle: org/ihtsdo/mysnow/importsct_impl/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

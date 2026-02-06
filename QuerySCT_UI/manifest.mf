@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.ihtsdo.mysnow.querysct_ui
+OpenIDE-Module-Layer: org/ihtsdo/mysnow/querysct_ui/layer.xml
+OpenIDE-Module-Localizing-Bundle: org/ihtsdo/mysnow/querysct_ui/Bundle.properties
+OpenIDE-Module-Requires: org.openide.windows.WindowManager
+OpenIDE-Module-Specification-Version: 1.0
+

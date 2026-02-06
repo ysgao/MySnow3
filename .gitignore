@@ -1,0 +1,17 @@
+# Build outputs
+/build/
+/dist/
+/lastModified
+/localeVariants
+/all-*.dat
+/package-attrs.dat
+/netbeans-platform.zip
+
+# NetBeans user/private files
+**/nbproject/private/
+**/build/classes/
+**/build/test/
+**/build/launcher/
+
+# OS files
+.DS_Store

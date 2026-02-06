@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Actions">
+        <folder name="Window">
+            <file name="org-ihtsdo-mysnow-querysct_ui-DetailsTopComponent.instance_hidden"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-ParentTopComponent.instance_hidden"/>
+        </folder>
+    </folder>
+    <folder name="QuickSearch">
+
+        <folder name="GoToOption_hidden"/>
+        <folder name="Actions_hidden"/>
+        
+        <folder name="SearchAll_hidden">
+            <attr name="command" stringvalue=""/>
+            <attr name="position" intvalue="0"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/SearchAll/org-ihtsdo-mysnow-querysct_ui-SctSearchProvider.instance"/>
+            </file>
+        </folder>        
+        <folder name="Finding">
+            <attr name="command" stringvalue="fin"/>
+            <attr name="position" intvalue="10"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchFindingProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Finding/org-ihtsdo-mysnow-querysct_ui-SctSearchFindingProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Procedure">
+            <attr name="command" stringvalue="pro"/>
+            <attr name="position" intvalue="20"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchProcedureProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Procedure/org-ihtsdo-mysnow-querysct_ui-SctSearchProcedureProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Situation">
+            <attr name="command" stringvalue="sit"/>
+            <attr name="position" intvalue="30"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchSituationProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Situation/org-ihtsdo-mysnow-querysct_ui-SctSearchSituationProvider.instance"/>
+            </file>
+        </folder>
+
+
+        <folder name="Substance">
+            <attr name="command" stringvalue="sub"/>
+            <attr name="position" intvalue="50"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchSubstanceProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Substance/org-ihtsdo-mysnow-querysct_ui-SctSearchSubstanceProvider.instance"/>
+            </file>
+        </folder>        
+
+        
+        <folder name="Attribute">
+            <attr name="command" stringvalue="att"/>
+            <attr name="position" intvalue="60"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchLinkAttributeProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Attribute/org-ihtsdo-mysnow-querysct_ui-SctSearchLinkAttributeProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Body">
+            <attr name="command" stringvalue="bod"/>
+            <attr name="position" intvalue="70"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchBodyStructureProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Body/org-ihtsdo-mysnow-querysct_ui-SctSearchBodyStructureProvider.instance"/>
+            </file>
+        </folder>        
+        <folder name="Qualifier">
+            <attr name="command" stringvalue="qua"/>
+            <attr name="position" intvalue="80"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchQualifierProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Qualifier/org-ihtsdo-mysnow-querysct_ui-SctSearchQualifierProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Observable">
+            <attr name="command" stringvalue="obs"/>
+            <attr name="position" intvalue="90"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchObservableProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Observable/org-ihtsdo-mysnow-querysct_ui-SctSearchObservableProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Organism">
+            <attr name="command" stringvalue="org"/>
+            <attr name="position" intvalue="100"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchOrganismProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Organism/org-ihtsdo-mysnow-querysct_ui-SctSearchOrganismProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Pharmaceutical">
+            <attr name="command" stringvalue="pha"/>
+            <attr name="position" intvalue="110"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchPharmaceuticalProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Pharmaceutical/org-ihtsdo-mysnow-querysct_ui-SctSearchPharmaceuticalProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="StageScale">
+            <attr name="command" stringvalue="sta"/>
+            <attr name="position" intvalue="120"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctStageScaleProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/StageScale/org-ihtsdo-mysnow-querysct_ui-SctStageScaleProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Event">
+            <attr name="command" stringvalue="eve"/>
+            <attr name="position" intvalue="130"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchEventProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Event/org-ihtsdo-mysnow-querysct_ui-SctSearchEventProvider.instance"/>
+            </file>
+        </folder>  
+        <folder name="Specimen">
+            <attr name="command" stringvalue="spe"/>
+            <attr name="position" intvalue="140"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSpecimenProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Specimen/org-ihtsdo-mysnow-querysct_ui-SctSpecimenProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Social">
+            <attr name="command" stringvalue="soc"/>
+            <attr name="position" intvalue="150"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSocialProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Social/org-ihtsdo-mysnow-querysct_ui-SctSocialProvider.instance"/>
+            </file>
+        </folder>      
+        <folder name="PhysioForce">
+            <attr name="command" stringvalue="phf"/>
+            <attr name="position" intvalue="160"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctPhysicalForceProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/PhysioForce/org-ihtsdo-mysnow-querysct_ui-SctPhysicalForceProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Record">
+            <attr name="command" stringvalue="rec"/>
+            <attr name="position" intvalue="170"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctRecordProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Record/org-ihtsdo-mysnow-querysct_ui-SctRecordProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Special">
+            <attr name="command" stringvalue="spe"/>
+            <attr name="position" intvalue="180"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSpecialProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Special/org-ihtsdo-mysnow-querysct_ui-SctSpecialProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Environment">
+            <attr name="command" stringvalue="env"/>
+            <attr name="position" intvalue="190"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctEnvironmentProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Environment/org-ihtsdo-mysnow-querysct_ui-SctEnvironmentProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Model">
+            <attr name="command" stringvalue="mod"/>
+            <attr name="position" intvalue="190"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctModelProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Model/org-ihtsdo-mysnow-querysct_ui-SctModelProvider.instance"/>
+            </file>
+        </folder>
+        <folder name="Physical">
+            <attr name="command" stringvalue="phy"/>
+            <attr name="position" intvalue="200"/>
+            <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchPhysicalProvider.instance">
+                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Physical/org-ihtsdo-mysnow-querysct_ui-SctSearchPhysicalProvider.instance"/>
+         </file>   
+        </folder>
+    </folder>
+</filesystem>

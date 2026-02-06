@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.ihtsdo.mysnow.querysct_api
+OpenIDE-Module-Localizing-Bundle: org/ihtsdo/mysnow/querysct_api/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See harness/README in the NetBeans platform -->
+<!-- for some information on what you could do (e.g. targets to override). -->
+<!-- If you delete this file and reopen the project it will be recreated. -->
+<project name="MySnow" basedir=".">
+    <description>Builds the module suite MySnow.</description>
+
+    <target name="neo4j-migrate" description="Run Neo4j offline store migration via tools/neo4j-migrate.sh">
+        <property name="neo4j.home" value="/opt/homebrew/opt/neo4j/libexec"/>
+        <property name="neo4j.db.home" value="${neo4j.home}/data/databases"/>
+        <property name="neo4j.db.name" value="neo4j"/>
+        <property name="neo4j.conf" value="${neo4j.home}/conf/neo4j.conf"/>
+
+        <echo message="Migrating Neo4j DB '${neo4j.db.name}' from '${neo4j.db.home}' using '${neo4j.home}'"/>
+        <exec executable="${basedir}/tools/neo4j-migrate.sh" failonerror="true">
+            <arg value="${neo4j.home}"/>
+            <arg value="${neo4j.db.home}"/>
+            <arg value="${neo4j.db.name}"/>
+            <arg value="${neo4j.conf}"/>
+        </exec>
+    </target>
+
+    <target name="fix-jdkhome-launcher" if="launcher.conf.exists">
+        <replaceregexp file="${build.launcher.dir}/etc/${app.name}.conf"
+                       match="^#?jdkhome=.*$"
+                       replace="jdkhome=&quot;${nbjdk.home}&quot;"
+                       flags="m"/>
+    </target>
+
+    <target name="fix-jdkhome-dist" if="dist.conf.exists">
+        <replaceregexp file="${dist.dir}/${app.name}.app/Contents/Resources/${app.name}/etc/${app.name}.conf"
+                       match="^#?jdkhome=.*$"
+                       replace="jdkhome=&quot;${nbjdk.home}&quot;"
+                       flags="m"/>
+    </target>
+
+    <target name="-init-fix-jdkhome" depends="-init">
+        <property name="build.launcher.dir" location="${suite.build.dir}/launcher"/>
+        <available file="${suite.build.dir}/launcher/etc/${app.name}.conf" property="launcher.conf.exists"/>
+        <available file="${dist.dir}/${app.name}.app/Contents/Resources/${app.name}/etc/${app.name}.conf" property="dist.conf.exists"/>
+    </target>
+
+    <target name="fix-jdkhome" depends="-init-fix-jdkhome,fix-jdkhome-launcher,fix-jdkhome-dist"
+            description="Force app jdkhome in generated launcher and mac app bundle config">
+        <echo message="Ensured jdkhome points to ${nbjdk.home} in launcher and dist configs (if present)."/>
+    </target>
+
+    <target name="build-mac-fixed" depends="build-mac,fix-jdkhome"
+            description="Build mac app bundle and force jdkhome to NetBeans JDK"/>
+
+    <target name="build-mac-dmg" depends="build-mac-fixed"
+            description="Build mac app bundle, fix jdkhome, and create DMG">
+        <exec executable="hdiutil" failonerror="true">
+            <arg value="create"/>
+            <arg value="-ov"/>
+            <arg value="-fs"/>
+            <arg value="HFS+"/>
+            <arg value="-volname"/>
+            <arg value="${app.name}"/>
+            <arg value="-srcfolder"/>
+            <arg value="${dist.dir}/${app.name}.app"/>
+            <arg value="${dist.dir}/${app.name}.dmg"/>
+        </exec>
+    </target>
+
+    <target name="clean-dist-mac" description="Remove existing mac app bundle and DMG">
+        <delete dir="${dist.dir}/${app.name}.app" failonerror="false"/>
+        <delete file="${dist.dir}/${app.name}.dmg" failonerror="false"/>
+    </target>
+
+    <target name="build-mac-fixed-clean" depends="clean-dist-mac,build-mac-fixed"
+            description="Clean mac dist, build app bundle, and force jdkhome to NetBeans JDK"/>
+
+    <target name="build-mac-dmg-clean" depends="clean-dist-mac,build-mac-dmg"
+            description="Clean mac dist, build app bundle, fix jdkhome, and create DMG"/>
+
+    <import file="nbproject/build-impl.xml"/>
+</project>
