@@ -1,0 +1,26 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": ".*\\.properties$"
+      },
+      {
+        "pattern": ".*Bundle.*\\.properties$"
+      },
+      {
+        "pattern": "org/netbeans/.*"
+      },
+      {
+        "pattern": "org/openide/.*"
+      }
+    ]
+  },
+  "bundles": [
+    {
+      "name": "org.netbeans.Bundle"
+    },
+    {
+      "name": "org.openide.util.NbBundle"
+    }
+  ]
+}
