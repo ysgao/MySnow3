@@ -4,14 +4,16 @@
  */
 package org.ihtsdo.mysnow.querysct_ui;
 
+import java.awt.Dimension;
+import java.awt.Insets;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.TreeSet;
 import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
 
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import org.ihtsdo.mysnow.querysct_api.QuerySCT;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -236,9 +238,9 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
                         .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(12, 12, 12)
                         .addComponent(jTextField7, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 588, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -348,17 +350,20 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
             jPanel1.setVisible(false);
             jPanel1.removeAll();
             addTerms(sctnode);
+            adjustPanelWidthToContent(jPanel1);
             jPanel1.setVisible(true);
 
             jPanel2.setVisible(false);
             jPanel2.removeAll();
-            addModelling(sctnode);            
+            addModelling(sctnode);
+            adjustPanelWidthToContent(jPanel2);
             if(jPanel2.getComponentCount()!=0){
             jPanel2.setVisible(true);}
             
             jPanel3.setVisible(false);
             jPanel3.removeAll();
             addParentDescription(sctnode);
+            adjustPanelWidthToContent(jPanel3);
             if(jPanel3.getComponentCount()!=0){
             jPanel3.setVisible(true);}
             
@@ -446,21 +451,20 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
 
 
     private void addTerms(Node sctnode) {
+        StringBuilder content = new StringBuilder();
 
         Collection<String> PTs = sctnode.getLookup().lookup(RootNode.class).getPTActive();
         for(String pt: PTs){
-//            JTextField jtf = new JTextField();
-//            jtf.setBackground(new Color(238,238,238));
-            jPanel1.add(new JLabel(pt));
-//            System.out.println("PT added: " + pt);
-            }
+            appendLine(content, pt);
+        }
 
        
         Collection<String> Syns = sctnode.getLookup().lookup(RootNode.class).getSynActive();
         for(String syn: Syns){
-            jPanel1.add(new JLabel(syn));
-//            System.out.println("Syn added: " + syn);
+            appendLine(content, syn);
         }
+
+        addSelectablePanelContent(jPanel1, content.toString());
         
 //        Collection<String> Unspecs = sctnode.getLookup().lookup(RootNode.class).getSynActive();
 //        for(String uns: Unspecs){
@@ -472,19 +476,16 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
     
     
         private void addParentDescription(Node sctnode) {
+        StringBuilder content = new StringBuilder();
         Collection<String> parentDescriptions = sctnode.getLookup().lookup(RootNode.class).getPrimitiveParentDescription();                  
         for(String pfsn: parentDescriptions){
-//            JTextArea jtextarea = new JTextArea();
-//            jtextarea.setText(pfsn);
-//            jtextarea.setRows(3);
-              jPanel3.add(new JLabel(pfsn));
-              
-//            System.out.println("Parent Descriptions: " + pfsn);
-            
+              appendLine(content, pfsn);
         }
+        addSelectablePanelContent(jPanel3, content.toString());
     }
 
     private void addModelling(Node sctnode) {
+        StringBuilder content = new StringBuilder();
     // Temparay solution. These needs to handle role group number > 10. So it better done in Query SCT imple as hashmap.    
         Collection<String> Models = sctnode.getLookup().lookup(RootNode.class).getModels();
 //        for(String st: Models){
@@ -497,13 +498,13 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
         }
         Collection<String> parentDescriptions = sctnode.getLookup().lookup(RootNode.class).getParetDescription();                  
         for(String pfsn: parentDescriptions){
-        jPanel2.add(new JLabel(" IS A = "+pfsn));
+            appendLine(content, " IS A = " + pfsn);
         }      
         for(String rg: RoleGroups){
             if(rg.equals("0")){
             for(String st: Models){
             if(st.substring(4,5).equals("0")){
-                jPanel2.add(new JLabel("  "+st.substring(8)));
+                appendLine(content, "  " + st.substring(8));
                 
             }
             }
@@ -511,21 +512,22 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
         }                
         for(String rg: RoleGroups){
             if(!rg.equals("0")){
-            jPanel2.add(new JLabel("Role Group"));
+            appendLine(content, "Role Group");
             
             for(String st: Models){
                 if(st.substring(4, 5).equals(rg)){
-                   jPanel2.add(new JLabel("      "+st.substring(8)));
+                   appendLine(content, "      " + st.substring(8));
                   
                 }
             }
         
 //        System.out.println("Modelling of Finding site: " + st.substring(4, 5)+" " + st.substring(0, 7) +"  "+st.substring(8)); 
                
-                   
+               
                }
                
            }
+        addSelectablePanelContent(jPanel2, content.toString());
     }
     
     private void addTextDefinition(Node sctnode) {
@@ -553,6 +555,58 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
                 jTextArea2.append("\n");
             }
         }
+    }
+
+    private JTextArea createSelectableLine(String text) {
+        String safeText = text == null ? "" : text;
+        JTextArea textLine = new JTextArea(safeText);
+        textLine.setEditable(false);
+        int rowCount = Math.max(1, safeText.split("\\R", -1).length);
+        textLine.setRows(rowCount);
+        textLine.setLineWrap(false);
+        textLine.setWrapStyleWord(false);
+        textLine.setOpaque(false);
+        textLine.setBorder(BorderFactory.createEmptyBorder());
+        textLine.setFont(jTextField1.getFont());
+        textLine.setForeground(jTextField1.getForeground());
+        textLine.setAlignmentX(LEFT_ALIGNMENT);
+        // Allow BoxLayout to stretch each row to panel width while keeping natural row height.
+        textLine.setMaximumSize(new Dimension(Integer.MAX_VALUE, textLine.getPreferredSize().height));
+        return textLine;
+    }
+
+    private void addSelectablePanelContent(javax.swing.JPanel panel, String text) {
+        if (text != null && !text.isEmpty()) {
+            panel.add(createSelectableLine(text));
+        }
+    }
+
+    private void appendLine(StringBuilder builder, String line) {
+        if (line == null || line.isEmpty()) {
+            return;
+        }
+        if (builder.length() > 0) {
+            builder.append('\n');
+        }
+        builder.append(line);
+    }
+
+    private void adjustPanelWidthToContent(javax.swing.JPanel panel) {
+        Insets insets = panel.getInsets();
+        int widestContent = 0;
+        int totalContentHeight = 0;
+        for (java.awt.Component component : panel.getComponents()) {
+            widestContent = Math.max(widestContent, component.getPreferredSize().width);
+            totalContentHeight += component.getPreferredSize().height;
+        }
+        int horizontalPadding = 24;
+        int verticalPadding = 12;
+        int preferredWidth = insets.left + insets.right + widestContent + horizontalPadding;
+        int preferredHeight = insets.top + insets.bottom + totalContentHeight + verticalPadding;
+        panel.setPreferredSize(new Dimension(preferredWidth, preferredHeight));
+        panel.setMinimumSize(new Dimension(preferredWidth, 0));
+        panel.revalidate();
+        panel.repaint();
     }
     
 }
