@@ -9,6 +9,9 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.io.ByteUnit;
 
 public final class EmbeddedDbManager {
+    private static final String DEFAULT_TX_LOG_RETENTION_POLICY = "2 files";
+    private static final long DEFAULT_TX_LOG_ROTATION_THRESHOLD_BYTES = ByteUnit.mebiBytes(64);
+
     private final File databaseDirectory;
     private DatabaseManagementService managementService;
 
@@ -18,8 +21,9 @@ public final class EmbeddedDbManager {
 
     public synchronized GraphDatabaseService start() {
         if (managementService == null) {
-            managementService = new DatabaseManagementServiceBuilder(databaseDirectory.toPath())
-                    .build();
+            DatabaseManagementServiceBuilder builder = new DatabaseManagementServiceBuilder(databaseDirectory.toPath());
+            applyDefaultTxLogSettings(builder);
+            managementService = builder.build();
         }
         return getDefaultDatabase();
     }
@@ -27,12 +31,23 @@ public final class EmbeddedDbManager {
     public synchronized GraphDatabaseService start(Neo4jConfig config) {
         if (managementService == null) {
             DatabaseManagementServiceBuilder builder = new DatabaseManagementServiceBuilder(databaseDirectory.toPath());
-            if (config != null && config.getPageCacheMiB() != null && config.getPageCacheMiB() > 0) {
-                builder = builder.setConfig(GraphDatabaseSettings.pagecache_memory, ByteUnit.mebiBytes(config.getPageCacheMiB()));
+            applyDefaultTxLogSettings(builder);
+            if (config != null) {
+                if (config.getConfigFile() != null) {
+                    builder = builder.loadPropertiesFromFile(config.getConfigFile().toPath());
+                }
+                if (config.getPageCacheMiB() != null && config.getPageCacheMiB() > 0) {
+                    builder = builder.setConfig(GraphDatabaseSettings.pagecache_memory, ByteUnit.mebiBytes(config.getPageCacheMiB()));
+                }
             }
             managementService = builder.build();
         }
         return getDefaultDatabase();
+    }
+
+    private static void applyDefaultTxLogSettings(DatabaseManagementServiceBuilder builder) {
+        builder.setConfig(GraphDatabaseSettings.keep_logical_logs, DEFAULT_TX_LOG_RETENTION_POLICY);
+        builder.setConfig(GraphDatabaseSettings.logical_log_rotation_threshold, DEFAULT_TX_LOG_ROTATION_THRESHOLD_BYTES);
     }
 
     public synchronized DatabaseManagementService getManagementService() {

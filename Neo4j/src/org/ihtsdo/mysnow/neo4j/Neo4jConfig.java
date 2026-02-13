@@ -9,9 +9,11 @@ public final class Neo4jConfig {
     private static final String PROP_PAGECACHE = "dbms.pagecache.memory";
     private static final String DEFAULT_CONFIG_PATH = System.getProperty("user.home") + "/.mysnow2/neo4j.conf";
 
+    private final File configFile;
     private final Long pageCacheMiB;
 
-    private Neo4jConfig(Long pageCacheMiB) {
+    private Neo4jConfig(File configFile, Long pageCacheMiB) {
+        this.configFile = configFile;
         this.pageCacheMiB = pageCacheMiB;
     }
 
@@ -23,18 +25,22 @@ public final class Neo4jConfig {
 
     public static Neo4jConfig load(File configFile) {
         if (configFile == null || !configFile.exists()) {
-            return new Neo4jConfig(null);
+            return new Neo4jConfig(null, null);
         }
 
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream(configFile)) {
             props.load(in);
         } catch (IOException e) {
-            return new Neo4jConfig(null);
+            return new Neo4jConfig(null, null);
         }
 
         Long pageCache = parseMemoryMiB(props.getProperty(PROP_PAGECACHE));
-        return new Neo4jConfig(pageCache);
+        return new Neo4jConfig(configFile, pageCache);
+    }
+
+    public File getConfigFile() {
+        return configFile;
     }
 
     public Long getPageCacheMiB() {

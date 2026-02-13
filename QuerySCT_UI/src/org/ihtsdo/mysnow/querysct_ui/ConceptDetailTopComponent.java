@@ -82,6 +82,8 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        contentPanel = new javax.swing.JPanel();
+        conceptDetailScrollPane = new javax.swing.JScrollPane();
         jTextField1 = new javax.swing.JTextField();
         jTextField2 = new javax.swing.JTextField();
         jTextField3 = new javax.swing.JTextField();
@@ -222,14 +224,14 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
 
         jPanel5.add(jScrollPane2);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+        javax.swing.GroupLayout contentPanelLayout = new javax.swing.GroupLayout(contentPanel);
+        contentPanel.setLayout(contentPanelLayout);
+        contentPanelLayout.setHorizontalGroup(
+            contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(contentPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
+                .addGroup(contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(contentPanelLayout.createSequentialGroup()
                         .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(12, 12, 12)
                         .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -249,19 +251,19 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(20, Short.MAX_VALUE))
         );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+        contentPanelLayout.setVerticalGroup(
+            contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(contentPanelLayout.createSequentialGroup()
                 .addGap(8, 8, 8)
                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jTextField4)
                         .addComponent(jTextField5)
                         .addComponent(jTextField6)
                         .addComponent(jTextField7))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addGroup(contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jTextField2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jTextField3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addGap(14, 14, 14)
@@ -277,6 +279,13 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
                 .addContainerGap(111, Short.MAX_VALUE))
         );
 
+        conceptDetailScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        conceptDetailScrollPane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        conceptDetailScrollPane.setViewportView(contentPanel);
+
+        setLayout(new java.awt.BorderLayout());
+        add(conceptDetailScrollPane, java.awt.BorderLayout.CENTER);
+
         jTextField7.getAccessibleContext().setAccessibleDescription(org.openide.util.NbBundle.getMessage(ConceptDetailTopComponent.class, "ConceptDetailTopComponent.jTextField7.AccessibleContext.accessibleDescription")); // NOI18N
         jPanel2.getAccessibleContext().setAccessibleName(org.openide.util.NbBundle.getMessage(ConceptDetailTopComponent.class, "ConceptDetailTopComponent.jPanel2.AccessibleContext.accessibleName")); // NOI18N
         jPanel3.getAccessibleContext().setAccessibleName(org.openide.util.NbBundle.getMessage(ConceptDetailTopComponent.class, "ConceptDetailTopComponent.jPanel3.AccessibleContext.accessibleName")); // NOI18N
@@ -288,6 +297,8 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
     }//GEN-LAST:event_jTextField7ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JScrollPane conceptDetailScrollPane;
+    private javax.swing.JPanel contentPanel;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;

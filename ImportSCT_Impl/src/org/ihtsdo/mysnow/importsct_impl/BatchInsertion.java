@@ -322,6 +322,10 @@ public void importSimpleMapRefset(String SimpleMapFilePath) throws IOException{
                 long refsetid = Long.parseLong(datavalue[4]);
                 long compid = Long.parseLong(datavalue[5]);
                 String maptarget = datavalue[6];           
+
+                if (active != 1) {
+                    continue;
+                }
              
             Map<String, Object> hasmap_properties = new HashMap<>();    
                 hasmap_properties.put("mapid", simplemapid);
