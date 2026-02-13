@@ -652,14 +652,14 @@ public void importRelationships(String relfilepath) throws IOException{
         // Build attribute map before loading relationships so we can name non-ISA edges
         attmap.clear();
         try (Transaction tx = graphDB.beginTx()) {
-    Node attnode = tx.findNode(conceptLabel, SCTID_KEY, 410662002);
+    Node attnode = tx.findNode(conceptLabel, SCTID_KEY, 410662002);   // 410662002 |Concept model attribute (attribute)|
             if (attnode != null) {
                 Traverser allattnodes = getISAExcludeStartTraverser(attnode, tx);
                 for(org.neo4j.graphdb.Path subpath : allattnodes){
         String attid = subpath.endNode().getProperty(SCTID_KEY).toString();
                     fsn = subpath.endNode().getProperty("fsn").toString();
-                    String term = fsn.substring(0, fsn.length()-11);
-                    attmap.put(attid, term);
+                    // String term = fsn.substring(0, fsn.length()-11);
+                    attmap.put(attid, fsn);
                 }
             }
             tx.commit();
