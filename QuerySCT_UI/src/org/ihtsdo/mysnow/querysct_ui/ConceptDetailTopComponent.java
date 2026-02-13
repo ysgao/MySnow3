@@ -520,19 +520,31 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
         }
 
         for (Map.Entry<Integer, List<String>> entry : singleAttributeGroups) {
-            appendLine(content, "Role Group");
-            for (String model : entry.getValue()) {
-                appendLine(content, "      " + model);
-            }
+            appendGroupedModels(content, entry.getValue());
         }
 
         for (Map.Entry<Integer, List<String>> entry : multiAttributeGroups) {
-            appendLine(content, "Role Group");
-            for (String model : entry.getValue()) {
-                appendLine(content, "      " + model);
-            }
+            appendGroupedModels(content, entry.getValue());
         }
         addSelectablePanelContent(jPanel2, content.toString());
+    }
+
+    private void appendGroupedModels(StringBuilder content, List<String> models) {
+        if (models == null || models.isEmpty()) {
+            return;
+        }
+        if (models.size() == 1) {
+            appendLine(content, "  { " + models.get(0) + " }");
+            return;
+        }
+        appendLine(content, "  { " + models.get(0));
+        for (int i = 1; i < models.size(); i++) {
+            if (i == models.size() - 1) {
+                appendLine(content, "    " + models.get(i) + " }");
+            } else {
+                appendLine(content, "    " + models.get(i));
+            }
+        }
     }
 
     private int extractRoleGroup(String modelLine) {
