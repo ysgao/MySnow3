@@ -53,7 +53,7 @@ public final class ExplorerTopComponent extends TopComponent implements Explorer
     private ActionMap map = this.getActionMap();
     static QuerySCT querysct=Lookup.getDefault().lookup(QuerySCT.class);
     private static BeanTreeView btv;
-    private static final String DB_PATH = System.getProperty("user.home")+"/neo4j-sct2-store"; 
+    private static final String DB_PATH = System.getProperty("user.home")+"/neo4j-sct3-store"; 
 //    private static final String DB_PATH ="/graphstore/neo4j-sct-store";    
     private static final File File_Store = new File(DB_PATH);
     
@@ -74,7 +74,7 @@ public final class ExplorerTopComponent extends TopComponent implements Explorer
         setName(Bundle.CTL_ExplorerTopComponent());
         setToolTipText(Bundle.HINT_ExplorerTopComponent());
         if (!File_Store.exists()) {
-            String msg = "Cannot find neo4j-sct2-store at "+System.getProperty("user.home")+"\n"+
+            String msg = "Cannot find neo4j-sct3-store at "+System.getProperty("user.home")+"\n"+
                     "Please import SNOMED CT release files by clicking Window and selecting Import from the menu of this application.";
             final NotifyDescriptor d = new NotifyDescriptor.Message(msg);
             WindowManager.getDefault().invokeWhenUIReady(new Runnable(){

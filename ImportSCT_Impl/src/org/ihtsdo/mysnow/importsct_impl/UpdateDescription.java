@@ -23,7 +23,7 @@ import org.openide.filesystems.FileUtil;
  */
 public class UpdateDescription {
    
-    private static final String DB_PATH = System.getProperty("user.home")+"/neo4j-sct2-store";
+    private static final String DB_PATH = System.getProperty("user.home")+"/neo4j-sct3-store";
     private static final File File_Store = new File(DB_PATH);
     private static final FileObject File_Store_FO = FileUtil.toFileObject(File_Store);
     private static GraphDatabaseService graphDB; 

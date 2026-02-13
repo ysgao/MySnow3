@@ -55,7 +55,7 @@ import org.openide.windows.OutputWriter;
  */
 @ServiceProvider(service = QuerySCT.class)
 public class QuerySCTimpl implements QuerySCT {
-    private static final String DB_PATH = System.getProperty("user.home")+"/neo4j-sct2-store"; 
+    private static final String DB_PATH = System.getProperty("user.home")+"/neo4j-sct3-store"; 
 //    private static final String DB_PATH = "/graphstore/neo4j-sct-store"; 
     private static final File File_Store = new File(DB_PATH);
     private static final EmbeddedDbManager dbManager = new EmbeddedDbManager(File_Store);

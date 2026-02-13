@@ -19,7 +19,7 @@ import org.neo4j.graphdb.Node;
  */
 public class FindConceptDescendents {
     
-String filepath = System.getProperty("user.home") + "/neo4j-sct2-store";
+String filepath = System.getProperty("user.home") + "/neo4j-sct3-store";
 File inserter_store = new File(filepath);
 private static GraphDatabaseService graphDB;
 long conceptid;

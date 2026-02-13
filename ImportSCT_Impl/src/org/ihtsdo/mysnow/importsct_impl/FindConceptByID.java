@@ -23,7 +23,7 @@ import org.neo4j.graphdb.Transaction;
  */
 public class FindConceptByID {
     
-String filepath = System.getProperty("user.home") + "/neo4j-sct2-store";
+String filepath = System.getProperty("user.home") + "/neo4j-sct3-store";
 File inserter_store = new File(filepath);
 private final EmbeddedDbManager dbManager = new EmbeddedDbManager(inserter_store);
 private static GraphDatabaseService graphDB;

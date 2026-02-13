@@ -48,7 +48,7 @@ public class BatchInsertion implements ImportSCT {
 
     private static final int BATCH_SIZE = 10000;
     BatchInserterCompat inserter;
-// String filepath = "/Users/yoga/neo4j-sct2-store";
+// String filepath = "/Users/yoga/neo4j-sct3-store";
     private final String filepath;
     File file_store;
     private final FileObject File_Store_FO;
@@ -117,7 +117,7 @@ private String langPath = null;
         this.descLabel = Label.label("Description");
         this.conceptLabel = Label.label("Concept");
 
-        this.filepath = System.getProperty("user.home")+"/neo4j-sct2-store";
+        this.filepath = System.getProperty("user.home")+"/neo4j-sct3-store";
         this.file_store = new File(filepath);
         this.File_Store_FO = FileUtil.toFileObject(file_store);
         this.dbManager = new EmbeddedDbManager(file_store);

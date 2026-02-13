@@ -21,7 +21,7 @@ import org.neo4j.graphdb.Transaction;
  */
 public class FindDescription {
     
-    private final String filepath = System.getProperty("user.home") + "/neo4j-sct2-store";
+    private final String filepath = System.getProperty("user.home") + "/neo4j-sct3-store";
     private final File inserter_store = new File(filepath);
     private final EmbeddedDbManager dbManager = new EmbeddedDbManager(inserter_store);
     private final Label conceptLabel = Label.label("Concept");

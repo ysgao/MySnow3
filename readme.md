@@ -25,7 +25,7 @@ MySnow2 is a NetBeans Platform application for visualizing SNOMED CT terminology
 9. `tools` — helper scripts (e.g., build wrappers, DB migration helper).
 
 ## Core Data Paths
-1. Default Neo4j database location: `~/neo4j-sct2-store`.
+1. Default Neo4j database location: `~/neo4j-sct3-store`.
 2. Neo4j config: `~/.mysnow2/neo4j.conf`.
 3. Config override: set system property `mysnow.neo4j.conf` to a custom file path.
 4. Page cache config key: `dbms.pagecache.memory` (MiB or GiB).
