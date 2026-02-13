@@ -6,8 +6,11 @@ package org.ihtsdo.mysnow.querysct_ui;
 
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.TreeSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 
@@ -486,48 +489,77 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
 
     private void addModelling(Node sctnode) {
         StringBuilder content = new StringBuilder();
-    // Temparay solution. These needs to handle role group number > 10. So it better done in Query SCT imple as hashmap.    
         Collection<String> Models = sctnode.getLookup().lookup(RootNode.class).getModels();
-//        for(String st: Models){
-//            jPanel3.add(new JLabel(st));
-//        }
-        
-        TreeSet<String> RoleGroups = new TreeSet<>();
-        for(String st: Models){
-            RoleGroups.add(st.substring(4, 5));
-        }
         Collection<String> parentDescriptions = sctnode.getLookup().lookup(RootNode.class).getParetDescription();                  
         for(String pfsn: parentDescriptions){
-            appendLine(content, " IS A = " + pfsn);
-        }      
-        for(String rg: RoleGroups){
-            if(rg.equals("0")){
-            for(String st: Models){
-            if(st.substring(4,5).equals("0")){
-                appendLine(content, "  " + st.substring(8));
-                
+            appendLine(content, pfsn);
+        }
+
+        Map<Integer, List<String>> groupedModels = new LinkedHashMap<>();
+        for (String st : Models) {
+            int rg = extractRoleGroup(st);
+            String details = extractModelDetails(st);
+            groupedModels.computeIfAbsent(rg, k -> new ArrayList<>()).add(details);
+        }
+
+        List<String> nonGrouped = groupedModels.remove(0);
+        if (nonGrouped != null) {
+            for (String model : nonGrouped) {
+                appendLine(content, "  " + model);
             }
+        }
+
+        List<Map.Entry<Integer, List<String>>> singleAttributeGroups = new ArrayList<>();
+        List<Map.Entry<Integer, List<String>>> multiAttributeGroups = new ArrayList<>();
+        for (Map.Entry<Integer, List<String>> entry : groupedModels.entrySet()) {
+            if (entry.getValue().size() == 1) {
+                singleAttributeGroups.add(entry);
+            } else {
+                multiAttributeGroups.add(entry);
             }
-            }
-        }                
-        for(String rg: RoleGroups){
-            if(!rg.equals("0")){
+        }
+
+        for (Map.Entry<Integer, List<String>> entry : singleAttributeGroups) {
             appendLine(content, "Role Group");
-            
-            for(String st: Models){
-                if(st.substring(4, 5).equals(rg)){
-                   appendLine(content, "      " + st.substring(8));
-                  
-                }
+            for (String model : entry.getValue()) {
+                appendLine(content, "      " + model);
             }
-        
-//        System.out.println("Modelling of Finding site: " + st.substring(4, 5)+" " + st.substring(0, 7) +"  "+st.substring(8)); 
-               
-               
-               }
-               
-           }
+        }
+
+        for (Map.Entry<Integer, List<String>> entry : multiAttributeGroups) {
+            appendLine(content, "Role Group");
+            for (String model : entry.getValue()) {
+                appendLine(content, "      " + model);
+            }
+        }
         addSelectablePanelContent(jPanel2, content.toString());
+    }
+
+    private int extractRoleGroup(String modelLine) {
+        if (modelLine == null) {
+            return 0;
+        }
+        int start = modelLine.indexOf('[');
+        int end = modelLine.indexOf(']');
+        if (start >= 0 && end > start) {
+            try {
+                return Integer.parseInt(modelLine.substring(start + 1, end).trim());
+            } catch (NumberFormatException ex) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    private String extractModelDetails(String modelLine) {
+        if (modelLine == null) {
+            return "";
+        }
+        int delimiterIndex = modelLine.indexOf("]  ");
+        if (delimiterIndex >= 0 && delimiterIndex + 3 < modelLine.length()) {
+            return modelLine.substring(delimiterIndex + 3);
+        }
+        return modelLine;
     }
     
     private void addTextDefinition(Node sctnode) {

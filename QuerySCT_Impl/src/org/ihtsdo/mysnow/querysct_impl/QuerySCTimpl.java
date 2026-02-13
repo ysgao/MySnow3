@@ -10,10 +10,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -89,6 +96,207 @@ public class QuerySCTimpl implements QuerySCT {
     Label conceptLabel = Label.label("Concept");
     Label descLabel = Label.label("Description");
     ArrayList<Node> descNodes = new ArrayList<>();
+    private static final int DEFAULT_ATTRIBUTE_RANK = 10_000;
+
+    private static final List<String> PHARMACEUTICAL_ATTRIBUTE_ORDER = Arrays.asList(
+            "has manufactured dose form",
+            "has manufacture dose form",
+            "has unit of presentation",
+            "count of active ingredient",
+            "count of base active ingredient",
+            "count of base and modification pair",
+            "has ingredient",
+            "has active ingredient",
+            "has precise active ingredient",
+            "has basis of strength substance",
+            "has concentration strength numerator value",
+            "has concentration stregth numerator unit",
+            "has concentration strength numerator unit",
+            "has concentration strength denominator value",
+            "has concentration strength denominator unit",
+            "has presentation strength numberator value",
+            "has presentation strength numerator value",
+            "hass presentation strength numerator unit",
+            "has presentation strength numerator unit",
+            "has presentation strength denominator value",
+            "has presentation strength denominator unit",
+            "plays role"
+    );
+
+    private static final List<String> CLINICAL_FINDING_ATTRIBUTE_ORDER = Arrays.asList(
+            "episodicity",
+            "clinical course",
+            "serverity",
+            "severity",
+            "finding method",
+            "interprets",
+            "has interpretation",
+            "finding informer",
+            "associated with",
+            "due to",
+            "temporally related to",
+            "before",
+            "after",
+            "during",
+            "occurrence",
+            "finding site",
+            "associated morphology",
+            "pathological process",
+            "has realization",
+            "causative agent"
+    );
+
+    private static final List<String> BODY_STRUCTURE_ATTRIBUTE_ORDER = Arrays.asList(
+            "all or part of",
+            "proper part of",
+            "constitutional part of",
+            "regional part of",
+            "lateral half of",
+            "systemic part of",
+            "laterality"
+    );
+
+    private static final List<String> EVENT_ATTRIBUTE_ORDER = Arrays.asList(
+            "associated with",
+            "due to",
+            "temporally related to",
+            "before",
+            "after",
+            "during",
+            "causative agent",
+            "occurrence"
+    );
+
+    private static final List<String> OBSERVABLE_ENTITY_ATTRIBUTE_ORDER = Arrays.asList(
+            "inheres in",
+            "property",
+            "scale type",
+            "direct site",
+            "inherent location",
+            "characterizes",
+            "process agent",
+            "process duration",
+            "process output",
+            "towards",
+            "relative to",
+            "relative to part of",
+            "precondition",
+            "units",
+            "technique",
+            "procedure device",
+            "has relization",
+            "has realization",
+            "using device",
+            "component",
+            "time aspect"
+    );
+
+    private static final List<String> SITUATION_ATTRIBUTE_ORDER = Arrays.asList(
+            "associated finding",
+            "finding context",
+            "associated procedure",
+            "procedure context",
+            "subject relationship context",
+            "temporal context"
+    );
+
+    private static final List<String> MEDICINAL_PRODUCT_PACKAGE_ATTRIBUTE_ORDER = Arrays.asList(
+            "contains clinical drug",
+            "has pack size",
+            "has pack size unit",
+            "has supplier",
+            "has product name",
+            "count of clinical drug type"
+    );
+
+    private static final List<String> PHARMACEUTICAL_DOSE_FORM_ATTRIBUTE_ORDER = Arrays.asList(
+            "has basic dose form",
+            "has dose form intended site",
+            "has dose form release characteristic",
+            "has dose form transformation",
+            "has dose form administration method"
+    );
+
+    private static final List<String> PROCEDURE_ATTRIBUTE_ORDER = Arrays.asList(
+            "priority",
+            "revision status",
+            "surgical approach",
+            "access",
+            "scale type",
+            "method",
+            "procedure site",
+            "procedure site - direct",
+            "procedure site - indirect",
+            "procedure morphology",
+            "direct morphology",
+            "indirect morphology",
+            "procedure device",
+            "direct device",
+            "indirect device",
+            "using device",
+            "using access device",
+            "has intent",
+            "has focus",
+            "direct substance",
+            "using energy",
+            "using substance",
+            "route of administration",
+            "recipient category",
+            "time aspect",
+            "property",
+            "component",
+            "has specimen",
+            "measurement method"
+    );
+
+    private static final List<String> SPECIMEN_ATTRIBUTE_ORDER = Arrays.asList(
+            "specimen procedure",
+            "specimen source identity",
+            "specimen source morphlogy",
+            "specimen source morphology",
+            "specimen source topography",
+            "specimen substance"
+    );
+
+    private static final List<String> SUBSTANCE_ATTRIBUTE_ORDER = Arrays.asList(
+            "has disposition",
+            "is modification of"
+    );
+
+    private static final List<String> PHYSICAL_OBJECT_ATTRIBUTE_ORDER = Arrays.asList(
+            "has device intended site",
+            "has compositional material",
+            "has filling",
+            "has surface characteristic",
+            "has device characteristic"
+    );
+
+    private static final Map<String, Integer> PHARMACEUTICAL_ATTRIBUTE_RANK = buildAttributeRank(PHARMACEUTICAL_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> CLINICAL_FINDING_ATTRIBUTE_RANK = buildAttributeRank(CLINICAL_FINDING_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> BODY_STRUCTURE_ATTRIBUTE_RANK = buildAttributeRank(BODY_STRUCTURE_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> EVENT_ATTRIBUTE_RANK = buildAttributeRank(EVENT_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> OBSERVABLE_ENTITY_ATTRIBUTE_RANK = buildAttributeRank(OBSERVABLE_ENTITY_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> SITUATION_ATTRIBUTE_RANK = buildAttributeRank(SITUATION_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> MEDICINAL_PRODUCT_PACKAGE_ATTRIBUTE_RANK = buildAttributeRank(MEDICINAL_PRODUCT_PACKAGE_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> PHARMACEUTICAL_DOSE_FORM_ATTRIBUTE_RANK = buildAttributeRank(PHARMACEUTICAL_DOSE_FORM_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> PROCEDURE_ATTRIBUTE_RANK = buildAttributeRank(PROCEDURE_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> SPECIMEN_ATTRIBUTE_RANK = buildAttributeRank(SPECIMEN_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> SUBSTANCE_ATTRIBUTE_RANK = buildAttributeRank(SUBSTANCE_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> PHYSICAL_OBJECT_ATTRIBUTE_RANK = buildAttributeRank(PHYSICAL_OBJECT_ATTRIBUTE_ORDER);
+    private static final Map<String, Integer> GLOBAL_ATTRIBUTE_RANK = buildAttributeRank(mergeAttributeOrders(
+            PHARMACEUTICAL_ATTRIBUTE_ORDER,
+            CLINICAL_FINDING_ATTRIBUTE_ORDER,
+            BODY_STRUCTURE_ATTRIBUTE_ORDER,
+            EVENT_ATTRIBUTE_ORDER,
+            OBSERVABLE_ENTITY_ATTRIBUTE_ORDER,
+            SITUATION_ATTRIBUTE_ORDER,
+            MEDICINAL_PRODUCT_PACKAGE_ATTRIBUTE_ORDER,
+            PHARMACEUTICAL_DOSE_FORM_ATTRIBUTE_ORDER,
+            PROCEDURE_ATTRIBUTE_ORDER,
+            SPECIMEN_ATTRIBUTE_ORDER,
+            SUBSTANCE_ATTRIBUTE_ORDER,
+            PHYSICAL_OBJECT_ATTRIBUTE_ORDER
+    ));
 
     @Override
     public String getSctID(Node node) {
@@ -400,17 +608,170 @@ public class QuerySCTimpl implements QuerySCT {
         Collection<String> models= new ArrayList<String>();
            Transaction tx = getTx();
            Node txNode = reattach(node, tx);
+           String conceptFsn = txNode.hasProperty("fsn") ? txNode.getProperty("fsn").toString() : "";
+           ModelOrderProfile profile = detectModelOrderProfile(conceptFsn);
+           List<ModelEntry> entries = new ArrayList<>();
            for(Relationship r: txNode.getRelationships(Direction.OUTGOING)){
                RelationshipType reltype= r.getType();                    
                if(r.hasProperty("rg") && (int)r.getProperty("stated")==0 && !reltype.name().equals("Is a")){                   
                     int rg = Integer.parseInt(r.getProperty("rg").toString());                  
-                    String nodeinfo = r.getEndNode().getProperty("fsn").toString();
-                    models.add("RG ["+rg+"]  "+reltype.name() + " = "+ nodeinfo);
-//                    System.out.println("RG-"+rg+" "+reltype.name() + " = "+ nodeinfo); 
-                    
+                    Node endNode = r.getEndNode();
+                    String nodeinfo;
+                    if (endNode.hasProperty("fsn")) {
+                        nodeinfo = endNode.getProperty("fsn").toString();
+                    } else if (endNode.hasProperty("value")) {
+                        nodeinfo = endNode.getProperty("value").toString();
+                        if (nodeinfo.startsWith("#")) {
+                            nodeinfo = nodeinfo.substring(1);
+                        }
+                        if (nodeinfo.length() >= 2 && nodeinfo.startsWith("\"") && nodeinfo.endsWith("\"")) {
+                            nodeinfo = nodeinfo.substring(1, nodeinfo.length() - 1);
+                        }
+                    } else {
+                        nodeinfo = String.valueOf(endNode.getId());
+                    }
+                    entries.add(new ModelEntry(rg, reltype.name(), nodeinfo));
                 }
-        }  
+        }
+
+        Collections.sort(entries, Comparator
+                .comparingInt((ModelEntry e) -> e.rg == 0 ? 0 : 1)
+                .thenComparingInt(e -> getAttributeRank(e.relName, profile))
+                .thenComparingInt(e -> e.rg == 0 ? 0 : e.rg)
+                .thenComparing(e -> e.relName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(e -> e.nodeInfo, String.CASE_INSENSITIVE_ORDER));
+
+        for (ModelEntry entry : entries) {
+            models.add("RG [" + entry.rg + "]  " + entry.relName + " = " + entry.nodeInfo);
+        }
+
         return models;
+    }
+
+    private static Map<String, Integer> buildAttributeRank(List<String> attributes) {
+        Map<String, Integer> rank = new HashMap<>();
+        int position = 0;
+        for (String attribute : attributes) {
+            String key = attribute.toLowerCase(Locale.ROOT).trim();
+            if (!rank.containsKey(key)) {
+                rank.put(key, position++);
+            }
+        }
+        return rank;
+    }
+
+    private static List<String> mergeAttributeOrders(List<String>... lists) {
+        List<String> merged = new ArrayList<>();
+        for (List<String> list : lists) {
+            merged.addAll(list);
+        }
+        return merged;
+    }
+
+    private ModelOrderProfile detectModelOrderProfile(String conceptFsn) {
+        String normalized = conceptFsn == null ? "" : conceptFsn.toLowerCase(Locale.ROOT);
+        if (normalized.contains("pharmaceutical")
+                || normalized.contains("biologic")
+                || normalized.contains("medicinal")
+                || normalized.contains("clinical drug")
+                || normalized.contains("product")) {
+            return ModelOrderProfile.PHARMACEUTICAL;
+        }
+        if (normalized.contains("body structure")) {
+            return ModelOrderProfile.BODY_STRUCTURE;
+        }
+        if (normalized.contains("event")) {
+            return ModelOrderProfile.EVENT;
+        }
+        if (normalized.contains("observable entity")) {
+            return ModelOrderProfile.OBSERVABLE_ENTITY;
+        }
+        if (normalized.contains("situation")) {
+            return ModelOrderProfile.SITUATION;
+        }
+        if (normalized.contains("medicinal product package")) {
+            return ModelOrderProfile.MEDICINAL_PRODUCT_PACKAGE;
+        }
+        if (normalized.contains("pharmaceutical dose form")) {
+            return ModelOrderProfile.PHARMACEUTICAL_DOSE_FORM;
+        }
+        if (normalized.contains("procedure")) {
+            return ModelOrderProfile.PROCEDURE;
+        }
+        if (normalized.contains("specimen")) {
+            return ModelOrderProfile.SPECIMEN;
+        }
+        if (normalized.contains("substance")) {
+            return ModelOrderProfile.SUBSTANCE;
+        }
+        if (normalized.contains("physical object")) {
+            return ModelOrderProfile.PHYSICAL_OBJECT;
+        }
+        if (normalized.contains("clinical finding") || normalized.endsWith("(finding)")) {
+            return ModelOrderProfile.CLINICAL_FINDING;
+        }
+        return ModelOrderProfile.DEFAULT;
+    }
+
+    private int getAttributeRank(String relationshipName, ModelOrderProfile profile) {
+        String key = relationshipName == null ? "" : relationshipName.toLowerCase(Locale.ROOT).trim();
+        switch (profile) {
+            case PHARMACEUTICAL:
+                return PHARMACEUTICAL_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case CLINICAL_FINDING:
+                return CLINICAL_FINDING_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case BODY_STRUCTURE:
+                return BODY_STRUCTURE_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case EVENT:
+                return EVENT_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case OBSERVABLE_ENTITY:
+                return OBSERVABLE_ENTITY_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case SITUATION:
+                return SITUATION_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case MEDICINAL_PRODUCT_PACKAGE:
+                return MEDICINAL_PRODUCT_PACKAGE_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case PHARMACEUTICAL_DOSE_FORM:
+                return PHARMACEUTICAL_DOSE_FORM_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case PROCEDURE:
+                return PROCEDURE_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case SPECIMEN:
+                return SPECIMEN_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case SUBSTANCE:
+                return SUBSTANCE_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case PHYSICAL_OBJECT:
+                return PHYSICAL_OBJECT_ATTRIBUTE_RANK.getOrDefault(key, GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK));
+            case DEFAULT:
+            default:
+                return GLOBAL_ATTRIBUTE_RANK.getOrDefault(key, DEFAULT_ATTRIBUTE_RANK);
+        }
+    }
+
+    private enum ModelOrderProfile {
+        PHARMACEUTICAL,
+        CLINICAL_FINDING,
+        BODY_STRUCTURE,
+        EVENT,
+        OBSERVABLE_ENTITY,
+        SITUATION,
+        MEDICINAL_PRODUCT_PACKAGE,
+        PHARMACEUTICAL_DOSE_FORM,
+        PROCEDURE,
+        SPECIMEN,
+        SUBSTANCE,
+        PHYSICAL_OBJECT,
+        DEFAULT
+    }
+
+    private static final class ModelEntry {
+        private final int rg;
+        private final String relName;
+        private final String nodeInfo;
+
+        private ModelEntry(int rg, String relName, String nodeInfo) {
+            this.rg = rg;
+            this.relName = relName;
+            this.nodeInfo = nodeInfo;
+        }
     }
     
 

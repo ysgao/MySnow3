@@ -27,12 +27,14 @@ public interface ImportSCT {
     public void importTextDefinitions(String DefinitionFilePath) throws IOException;
     public void importRefsetLangauge(String LangFilePath) throws IOException;
     public void importRelationships(String relfilepath) throws IOException;
+    public void importRelationshipConcreteValues(String relConcreteFilePath) throws IOException;
     public void assignCounts();
 
     public void releaseVersion(String release);
     public void setReleaseFiles(FileObject folder);
     public String getConceptPathINT();
     public String getRelPathINT();
+    public String getRelConcretePathINT();
     public String getDescPathINT();
     public String getSimpleMapPath();
     public String getLangPath();

@@ -66,6 +66,7 @@ public class BatchInsertion implements ImportSCT {
     Label ICNPdiagnosesLabel;
     Label ICNPinterventionLabel;
     Label SNOMEDRTLabel;
+    Label concreteValueLabel;
 
     String PCOUNT_KEY;
     String CCOUNT_KEY;
@@ -88,6 +89,7 @@ private String intreldate = null;
 
 private String conceptPathINT = null;
 private String relPathINT = null;
+private String relConcretePathINT = null;
 private String statedRelPath = null;
 private String descPathINT = null;
 private String textDefinitionPath = null;
@@ -102,6 +104,7 @@ private String langPath = null;
         this.CCOUNT_KEY = "child_count";
         this.PCOUNT_KEY = "parent_count";
         this.SNOMEDRTLabel = Label.label("SNOMED RT");
+        this.concreteValueLabel = Label.label("Concrete Value");
         this.ICNPinterventionLabel = Label.label("ICNP Interventioins");
         this.ICNPdiagnosesLabel = Label.label("ICNP Diagnoses");
         this.ICDOLabel = Label.label("ICD-O");
@@ -825,6 +828,116 @@ public void importInferredRelaitonships(String relfilepath) throws IOException{
             }
 }
 
+@Override
+public void importRelationshipConcreteValues(String relConcreteFilePath) throws IOException{
+    if (relConcreteFilePath == null || relConcreteFilePath.trim().isEmpty()) {
+        throw new IOException("Concrete values relationship file path is null or empty");
+    }
+
+    File relFile = new File(relConcreteFilePath);
+    if (!relFile.exists()) {
+        throw new IOException("Concrete values relationship file does not exist: " + relConcreteFilePath);
+    }
+
+    io.getOut().println("Starting concrete values relationship import from: " + relConcreteFilePath);
+
+    try {
+        graphDB = dbManager.start(Neo4jConfig.load());
+        inserter = new BatchInserterCompat(graphDB, BATCH_SIZE);
+        inserter.createSchemaIndex(concreteValueLabel, "value");
+
+        Map<String, Object> inferredrel_properties = new HashMap<>();
+
+        if (attmap.isEmpty()) {
+            try (Transaction tx = graphDB.beginTx()) {
+                Node attnode = tx.findNode(conceptLabel, SCTID_KEY, 410662002);
+                if (attnode != null) {
+                    Traverser allattnodes = getISAExcludeStartTraverser(attnode, tx);
+                    for (org.neo4j.graphdb.Path subpath : allattnodes) {
+                        String attid = subpath.endNode().getProperty(SCTID_KEY).toString();
+                        fsn = subpath.endNode().getProperty("fsn").toString();
+                        String term = fsn.substring(0, fsn.length() - 11);
+                        attmap.put(attid, term);
+                    }
+                }
+                tx.commit();
+            }
+        }
+
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(relConcreteFilePath), "UTF-8"));
+            String readline;
+            int curLineNr = 1;
+            int skipLines = 1;
+            while ((readline = reader.readLine()) != null) {
+                if (curLineNr++ <= skipLines) {
+                    continue;
+                }
+                String datavalue[] = readline.split("\t");
+
+                long relid = Long.parseLong(datavalue[0]);
+                int effectiveTime = Integer.parseInt(datavalue[1]);
+                int active = Integer.parseInt(datavalue[2]);
+                long moduleid = Long.parseLong(datavalue[3]);
+                long sourceid = Long.parseLong(datavalue[4]);
+                String value = datavalue[5];
+                int rg = Integer.parseInt(datavalue[6]);
+                long reltype = Long.parseLong(datavalue[7]);
+                long character = Long.parseLong(datavalue[8]);
+                long modifier = Long.parseLong(datavalue[9]);
+                int stated = 0;
+
+                if (active == 1) {
+                    inferredrel_properties.put("relid", relid);
+                    inferredrel_properties.put("effectiveTime", effectiveTime);
+                    inferredrel_properties.put("active", active);
+                    inferredrel_properties.put("modulieid", moduleid);
+                    inferredrel_properties.put("rg", rg);
+                    inferredrel_properties.put("character", character);
+                    inferredrel_properties.put("modifier", modifier);
+                    inferredrel_properties.put("stated", stated);
+
+                    Long node1 = resolveConceptNodeId(sourceid);
+                    if (node1 == null) {
+                        continue;
+                    }
+
+                    Long valueNodeId = inserter.findNodeId(concreteValueLabel, "value", value);
+                    if (valueNodeId == null) {
+                        Map<String, Object> valueProperties = new HashMap<>();
+                        valueProperties.put("value", value);
+                        valueNodeId = inserter.createNode(valueProperties, concreteValueLabel);
+                    }
+
+                    String relKey = String.valueOf(reltype);
+                    String relName = attmap.get(relKey);
+                    if (relName == null) {
+                        Long relTypeNodeId = resolveConceptNodeId(reltype);
+                        if (relTypeNodeId != null) {
+                            Object fsnValue = inserter.getNodeProperty(relTypeNodeId, "fsn");
+                            relName = stripSemanticTag(fsnValue == null ? null : fsnValue.toString());
+                            if (relName != null) {
+                                attmap.put(relKey, relName);
+                            }
+                        }
+                    }
+                    if (relName == null) {
+                        relName = "RelType_" + relKey;
+                    }
+                    if (!String.valueOf(reltype).equals("116680003")) {
+                        RelationshipType inferredreltype = RelationshipType.withName(relName);
+                        inserter.createRelationship(node1, valueNodeId, inferredreltype, inferredrel_properties);
+                    }
+                }
+            }
+        } finally {
+            if (inserter != null) {inserter.shutdown();}
+        }
+    } finally {
+        dbManager.shutdown();
+    }
+}
+
 public void importStatedRelationships(String statedRelPath) throws IOException {
     //import stated is a relationship only 
 
@@ -1211,8 +1324,9 @@ public void setReleaseFiles(FileObject folder) {
             }
             else if (fileName.contains("relationship") && fileName.contains("snapshot") &&
                      fileName.contains("int") && fileName.endsWith(".txt")) {
-                if (fileName.contains("concrete")) {
-                    io.getOut().println("Skipping concrete values relationship file: " + fullPath);
+                if (fileName.startsWith("sct2_relationshipconcretevalues_snapshot")) {
+                    relConcretePathINT = fullPath;
+                    io.getOut().println("Found concrete values relationship file: " + relConcretePathINT);
                 } else if (relPathINT == null) {
                     relPathINT = fullPath;
                     io.getOut().println("Found relationship file: " + relPathINT);
@@ -1365,6 +1479,11 @@ public String getConceptPathINT(){
 @Override
 public String getRelPathINT(){
         return relPathINT;
+    }
+
+@Override
+public String getRelConcretePathINT(){
+        return relConcretePathINT;
     }
     
 @Override

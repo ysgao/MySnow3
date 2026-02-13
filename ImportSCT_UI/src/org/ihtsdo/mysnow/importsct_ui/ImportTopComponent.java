@@ -92,6 +92,7 @@ public final class ImportTopComponent extends TopComponent {
     
     private void importINTRel() throws IOException{
         String relPathINT = importsct.getRelPathINT();
+        String relConcretePathINT = importsct.getRelConcretePathINT();
         
         if (relPathINT == null || relPathINT.trim().isEmpty()) {
             io.getOut().println("ERROR: Relationship file path is not set. Please select a valid directory first.");
@@ -104,6 +105,12 @@ public final class ImportTopComponent extends TopComponent {
         
         try {
             importsct.importRelationships(relPathINT);
+            if (relConcretePathINT != null && !relConcretePathINT.trim().isEmpty()) {
+                io.getOut().println("Concrete values relationship file: " + relConcretePathINT);
+                importsct.importRelationshipConcreteValues(relConcretePathINT);
+            } else {
+                io.getOut().println("Concrete values relationship file not found - skipping");
+            }
         } catch (IOException e) {
             io.getOut().println("ERROR during relationship import: " + e.getMessage());
             throw e;
