@@ -4,6 +4,7 @@
  */
 package org.ihtsdo.mysnow.querysct_ui;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -24,24 +25,28 @@ public class SctSearchSituationProvider implements SearchProvider {
     public SctSearchSituationProvider() {
         node= querysct.getNodebyID(243796009);
         allsctnodes = querysct.getAllSctNodes(node);
-        Collections.sort((List<Node>) allsctnodes, new comp());
     }
    
          
     @Override
     public void evaluate(SearchRequest request, SearchResponse response) {
         if(request.getText().length()>2){
+        List<Node> matches = new ArrayList<Node>();
         for (Node sctnode:allsctnodes){
 //          for (Iterator<Node> iterator =querysct.getAllSctNodeIterator(243796009); iterator.hasNext();){
 //              Node sctnode = iterator.next();
             if(isTermConditionSatisfied(sctnode, request.getText())){
 //            for(String term: querysct.getTermsActiveOnly(sctnode)){
 //                if(term.contains(request.getText())){
-                   if(!response.addResult(new AddtoSearchList(sctnode), querysct.getSctFSN(sctnode))){
-                    return;
-                }
+                   matches.add(sctnode);
                }
             }
+        SearchResultOrderUtil.sortByShortestMatchingActiveDescriptionLength(querysct, matches, request.getText());
+        for (Node sctnode : matches) {
+            if(!response.addResult(new AddtoSearchList(sctnode), querysct.getSctFSN(sctnode))){
+                return;
+            }
+        }
         }
     }
     

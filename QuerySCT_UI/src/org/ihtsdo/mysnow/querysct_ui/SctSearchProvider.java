@@ -7,6 +7,7 @@ package org.ihtsdo.mysnow.querysct_ui;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import org.ihtsdo.mysnow.querysct_api.QuerySCT;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -31,17 +32,22 @@ public class SctSearchProvider implements SearchProvider {
              return;
          }
         Collection<Node> allsctnodes = querysct.getAllSctNodes(rootNode);
+        List<Node> matches = new ArrayList<Node>();
 //        for (Node sctnode:allsctnodes){
           for (Iterator<Node> iterator =querysct.getAllSctNodeIterator(138875005); iterator.hasNext();){
               Node sctnode = iterator.next();
               if(isTermConditionSatisfied(sctnode, request.getText())){
 //            for(String term: querysct.getTermsActiveOnly(sctnode)){
 //                if(term.contains(request.getText())){
-                   if(!response.addResult(new AddtoSearchList(sctnode), querysct.getDescFSN(sctnode))){
-                    return;
-                }
+                   matches.add(sctnode);
                }
             }
+        SearchResultOrderUtil.sortByShortestMatchingActiveDescriptionLength(querysct, matches, request.getText());
+        for (Node sctnode : matches) {
+            if(!response.addResult(new AddtoSearchList(sctnode), querysct.getDescFSN(sctnode))){
+                return;
+            }
+        }
         }
 
 

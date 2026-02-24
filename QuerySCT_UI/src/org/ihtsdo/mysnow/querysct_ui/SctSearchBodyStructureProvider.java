@@ -4,9 +4,8 @@
  */
 package org.ihtsdo.mysnow.querysct_ui;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import org.ihtsdo.mysnow.querysct_api.QuerySCT;
 import org.neo4j.graphdb.Node;
@@ -14,7 +13,6 @@ import org.netbeans.spi.quicksearch.SearchProvider;
 import org.netbeans.spi.quicksearch.SearchRequest;
 import org.netbeans.spi.quicksearch.SearchResponse;
 import org.openide.util.Lookup;
-import org.ihtsdo.mysnow.querysct_ui.comp;
 
 public class SctSearchBodyStructureProvider implements SearchProvider {
     private static QuerySCT querysct = Lookup.getDefault().lookup(QuerySCT.class);
@@ -25,23 +23,27 @@ public class SctSearchBodyStructureProvider implements SearchProvider {
     public SctSearchBodyStructureProvider() {
         node= querysct.getNodebyID(123037004);
         allsctnodes = querysct.getAllSctNodes(node);
-        Collections.sort((List<Node>) allsctnodes, new comp());
     }  
         
     @Override
     public void evaluate(SearchRequest request, SearchResponse response) {
          if(request.getText().length()>2){
+        List<Node> matches = new ArrayList<Node>();
         for (Node sctnode:allsctnodes){
 //          for (Iterator<Node> iterator =querysct.getAllSctNodeIterator(123037004); iterator.hasNext();){
 //              Node sctnode = iterator.next();
             if(isTermConditionSatisfied(sctnode, request.getText())){
 //            for(String term: querysct.getTermsActiveOnly(sctnode)){
 //                if(term.contains(request.getText())){
-                   if(!response.addResult(new AddtoSearchList(sctnode), querysct.getSctFSN(sctnode))){
-                    return;
-                }
+                   matches.add(sctnode);
                }
             }
+        SearchResultOrderUtil.sortByShortestMatchingActiveDescriptionLength(querysct, matches, request.getText());
+        for (Node sctnode : matches) {
+            if(!response.addResult(new AddtoSearchList(sctnode), querysct.getSctFSN(sctnode))){
+                return;
+            }
+        }
         }
     }
     
