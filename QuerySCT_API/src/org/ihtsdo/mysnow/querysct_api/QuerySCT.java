@@ -73,6 +73,7 @@ public interface QuerySCT {
     
     public Collection<String> getModels(Node node);
     public Collection<String> getStatedModels(Node node);
+    public Collection<String> getGciAxioms(Node node);
     
     /*
      * @method Return String FSN by the input of string concept ID

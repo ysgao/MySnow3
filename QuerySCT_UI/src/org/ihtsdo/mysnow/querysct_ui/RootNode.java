@@ -230,6 +230,10 @@ public class RootNode extends AbstractNode {
         return querysct.getStatedModels(sctnode);
     }
 
+    public Collection<String> getGciAxioms(){
+        return querysct.getGciAxioms(sctnode);
+    }
+
     @Override
     public Transferable clipboardCopy() throws IOException {
     Transferable deflt = super.clipboardCopy();

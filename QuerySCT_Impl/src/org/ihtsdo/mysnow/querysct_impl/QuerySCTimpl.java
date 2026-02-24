@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -691,6 +692,179 @@ public class QuerySCTimpl implements QuerySCT {
         }
 
         return models;
+    }
+
+    @Override
+    public Collection<String> getGciAxioms(Node node){
+        Collection<String> gciAxioms = new ArrayList<>();
+        Transaction tx = getTx();
+        Node txNode = reattach(node, tx);
+        String conceptFsn = txNode.hasProperty("fsn") ? txNode.getProperty("fsn").toString() : "";
+        ModelOrderProfile profile = detectModelOrderProfile(conceptFsn);
+        Map<String, List<ModelEntry>> groupedByAxiom = new LinkedHashMap<>();
+        Map<String, List<String>> statedParentsByAxiom = new LinkedHashMap<>();
+
+        for (Relationship r : txNode.getRelationships(Direction.OUTGOING)) {
+            RelationshipType reltype = r.getType();
+            if (!matchesIntProperty(r, "stated", 1) || !matchesIntProperty(r, "owlAxiom", 1) || !matchesIntProperty(r, "gciAxiom", 1)) {
+                continue;
+            }
+            String axiomId = r.hasProperty("relid") ? String.valueOf(r.getProperty("relid")) : String.valueOf(r.getId());
+            if ("Is a".equals(reltype.name())) {
+                String parentName = r.getEndNode().hasProperty("fsn") ? r.getEndNode().getProperty("fsn").toString() : String.valueOf(r.getEndNode().getId());
+                statedParentsByAxiom.computeIfAbsent(axiomId, key -> new ArrayList<>()).add(parentName);
+                continue;
+            }
+            if (!r.hasProperty("rg")) {
+                continue;
+            }
+            int rg = Integer.parseInt(r.getProperty("rg").toString());
+            String nodeinfo = resolveDestinationDisplay(r.getEndNode());
+            groupedByAxiom.computeIfAbsent(axiomId, key -> new ArrayList<>()).add(new ModelEntry(rg, reltype.name(), nodeinfo));
+        }
+
+        List<String> orderedAxiomIds = new ArrayList<>();
+        orderedAxiomIds.addAll(statedParentsByAxiom.keySet());
+        for (String axiomId : groupedByAxiom.keySet()) {
+            if (!orderedAxiomIds.contains(axiomId)) {
+                orderedAxiomIds.add(axiomId);
+            }
+        }
+
+        int axiomOrdinal = 1;
+        for (String axiomId : orderedAxiomIds) {
+            StringBuilder axiomContent = new StringBuilder();
+            appendLines(axiomContent, statedParentsByAxiom.get(axiomId));
+            List<ModelEntry> axiomEntries = groupedByAxiom.get(axiomId);
+            if (axiomEntries != null && !axiomEntries.isEmpty()) {
+                Collections.sort(axiomEntries, Comparator
+                        .comparingInt((ModelEntry e) -> e.rg == 0 ? 0 : 1)
+                        .thenComparingInt(e -> getAttributeRank(e.relName, profile))
+                        .thenComparingInt(e -> e.rg == 0 ? 0 : e.rg)
+                        .thenComparing(e -> e.relName, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(e -> e.nodeInfo, String.CASE_INSENSITIVE_ORDER));
+
+                Map<Integer, List<String>> groupedModels = new LinkedHashMap<>();
+                for (ModelEntry entry : axiomEntries) {
+                    groupedModels.computeIfAbsent(entry.rg, key -> new ArrayList<>()).add(entry.relName + " = " + entry.nodeInfo);
+                }
+
+                List<String> nonGrouped = groupedModels.remove(0);
+                if (nonGrouped != null) {
+                    appendLinesWithPrefix(axiomContent, nonGrouped, "  ");
+                }
+
+                List<Map.Entry<Integer, List<String>>> singleAttributeGroups = new ArrayList<>();
+                List<Map.Entry<Integer, List<String>>> multiAttributeGroups = new ArrayList<>();
+                for (Map.Entry<Integer, List<String>> entry : groupedModels.entrySet()) {
+                    if (entry.getValue().size() == 1) {
+                        singleAttributeGroups.add(entry);
+                    } else {
+                        multiAttributeGroups.add(entry);
+                    }
+                }
+
+                appendGroupedModelEntries(axiomContent, singleAttributeGroups);
+                appendGroupedModelEntries(axiomContent, multiAttributeGroups);
+            }
+
+            if (axiomContent.length() > 0) {
+                gciAxioms.add("Axiom " + axiomOrdinal + "\n" + axiomContent);
+                axiomOrdinal++;
+            }
+        }
+
+        return gciAxioms;
+    }
+
+    private boolean matchesIntProperty(Relationship relationship, String propertyName, int expectedValue) {
+        if (!relationship.hasProperty(propertyName)) {
+            return false;
+        }
+        Object value = relationship.getProperty(propertyName);
+        if (value instanceof Number) {
+            return ((Number) value).intValue() == expectedValue;
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value)) == expectedValue;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    private String resolveDestinationDisplay(Node endNode) {
+        if (endNode.hasProperty("fsn")) {
+            return endNode.getProperty("fsn").toString();
+        }
+        if (endNode.hasProperty("value")) {
+            String value = endNode.getProperty("value").toString();
+            if (value.startsWith("#")) {
+                value = value.substring(1);
+            }
+            if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
+            }
+            return value;
+        }
+        return String.valueOf(endNode.getId());
+    }
+
+    private void appendLines(StringBuilder builder, List<String> lines) {
+        if (lines == null) {
+            return;
+        }
+        for (String line : lines) {
+            if (line == null || line.trim().isEmpty()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append('\n');
+            }
+            builder.append(line);
+        }
+    }
+
+    private void appendLinesWithPrefix(StringBuilder builder, List<String> lines, String prefix) {
+        if (lines == null) {
+            return;
+        }
+        for (String line : lines) {
+            if (line == null || line.trim().isEmpty()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append('\n');
+            }
+            builder.append(prefix).append(line);
+        }
+    }
+
+    private void appendGroupedModelEntries(StringBuilder builder, List<Map.Entry<Integer, List<String>>> groupedEntries) {
+        for (Map.Entry<Integer, List<String>> groupedEntry : groupedEntries) {
+            List<String> models = groupedEntry.getValue();
+            if (models == null || models.isEmpty()) {
+                continue;
+            }
+            if (models.size() == 1) {
+                if (builder.length() > 0) {
+                    builder.append('\n');
+                }
+                builder.append("  { ").append(models.get(0)).append(" }");
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append('\n');
+            }
+            builder.append("  { ").append(models.get(0));
+            for (int i = 1; i < models.size(); i++) {
+                builder.append('\n');
+                if (i == models.size() - 1) {
+                    builder.append("    ").append(models.get(i)).append(" }");
+                } else {
+                    builder.append("    ").append(models.get(i));
+                }
+            }
+        }
     }
 
     private static Map<String, Integer> buildAttributeRank(List<String> attributes) {

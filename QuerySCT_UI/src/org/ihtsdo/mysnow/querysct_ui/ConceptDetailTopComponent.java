@@ -94,6 +94,7 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
         jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         jPanel6 = new javax.swing.JPanel();
+        jPanel7 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -192,6 +193,11 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
         jPanel6.setVerifyInputWhenFocusTarget(false);
         jPanel6.setLayout(new javax.swing.BoxLayout(jPanel6, javax.swing.BoxLayout.PAGE_AXIS));
 
+        jPanel7.setBackground(new java.awt.Color(244, 238, 219));
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED), "GCI Axioms", javax.swing.border.TitledBorder.LEFT, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Al Bayan", 0, 12), new java.awt.Color(102, 51, 0)));
+        jPanel7.setVerifyInputWhenFocusTarget(false);
+        jPanel7.setLayout(new javax.swing.BoxLayout(jPanel7, javax.swing.BoxLayout.PAGE_AXIS));
+
         jPanel3.setBackground(new java.awt.Color(250, 236, 236));
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED), org.openide.util.NbBundle.getMessage(ConceptDetailTopComponent.class, "ConceptDetailTopComponent.jPanel3.border.title"), javax.swing.border.TitledBorder.LEFT, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Al Bayan", 0, 12), new java.awt.Color(51, 0, 153))); // NOI18N
         jPanel3.setVerifyInputWhenFocusTarget(false);
@@ -252,6 +258,7 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
                     .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 588, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -279,6 +286,8 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -311,6 +320,7 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
@@ -362,12 +372,14 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
             if(isRootConcept){
                 jPanel2.setVisible(false);
                 jPanel6.setVisible(false);
+                jPanel7.setVisible(false);
                 jPanel3.setVisible(false);
                 jPanel4.setVisible(false);
                 jPanel5.setVisible(false);
             }else{
                 jPanel2.setVisible(true);
                 jPanel6.setVisible(true);
+                jPanel7.setVisible(true);
                 jPanel3.setVisible(true);
                 jPanel4.setVisible(true);
                 jPanel5.setVisible(true);
@@ -393,6 +405,13 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
             adjustPanelWidthToContent(jPanel6);
             if(!isRootConcept){
             jPanel6.setVisible(true);}
+
+            jPanel7.setVisible(false);
+            jPanel7.removeAll();
+            addGciAxioms(sctnode);
+            adjustPanelWidthToContent(jPanel7);
+            if(!isRootConcept && jPanel7.getComponentCount()!=0){
+            jPanel7.setVisible(true);}
             
             jPanel3.setVisible(false);
             jPanel3.removeAll();
@@ -600,6 +619,18 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
         }
 
         addSelectablePanelContent(jPanel6, content.toString());
+    }
+
+    private void addGciAxioms(Node sctnode) {
+        Collection<String> gciAxioms = sctnode.getLookup().lookup(RootNode.class).getGciAxioms();
+        boolean first = true;
+        for (String axiom : gciAxioms) {
+            if (!first) {
+                jPanel7.add(javax.swing.Box.createVerticalStrut(6));
+            }
+            addSelectablePanelContent(jPanel7, axiom);
+            first = false;
+        }
     }
 
     private void appendGroupedModels(StringBuilder content, List<String> models) {
