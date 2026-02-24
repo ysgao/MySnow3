@@ -53,14 +53,14 @@
         
         <folder name="Attribute">
             <attr name="command" stringvalue="att"/>
-            <attr name="position" intvalue="60"/>
+            <attr name="position" intvalue="210"/>
             <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchLinkAttributeProvider.instance">
                 <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Attribute/org-ihtsdo-mysnow-querysct_ui-SctSearchLinkAttributeProvider.instance"/>
             </file>
         </folder>
         <folder name="Body">
             <attr name="command" stringvalue="bod"/>
-            <attr name="position" intvalue="70"/>
+            <attr name="position" intvalue="25"/>
             <file name="org-ihtsdo-mysnow-querysct_ui-SctSearchBodyStructureProvider.instance">
                 <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Body/org-ihtsdo-mysnow-querysct_ui-SctSearchBodyStructureProvider.instance"/>
             </file>

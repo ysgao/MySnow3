@@ -588,6 +588,7 @@ java.util.Set
 javax.swing.BorderFactory
 javax.accessibility.AccessibleContext
 java.awt.Component
+javax.swing.Box
 java.awt.Dimension
 java.util.List
 java.lang.StringBuilder

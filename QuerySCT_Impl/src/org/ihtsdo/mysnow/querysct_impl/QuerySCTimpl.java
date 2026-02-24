@@ -659,7 +659,10 @@ public class QuerySCTimpl implements QuerySCT {
            List<ModelEntry> entries = new ArrayList<>();
            for(Relationship r: txNode.getRelationships(Direction.OUTGOING)){
                RelationshipType reltype= r.getType();
-               if(r.hasProperty("rg") && r.hasProperty("stated") && (int)r.getProperty("stated")==1 && !reltype.name().equals("Is a")){
+               if(r.hasProperty("rg")
+                       && matchesIntProperty(r, "stated", 1)
+                       && !matchesIntProperty(r, "gciAxiom", 1)
+                       && !reltype.name().equals("Is a")){
                     int rg = Integer.parseInt(r.getProperty("rg").toString());
                     Node endNode = r.getEndNode();
                     String nodeinfo;
@@ -1667,7 +1670,8 @@ public class QuerySCTimpl implements QuerySCT {
             Collection<String> dsnDescription = new HashSet<String>();
             Node txNode = reattach(sctnode, tx);
             for(Relationship r : txNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("Is a")))
-                if((int)r.getProperty("stated")==1){
+                if(matchesIntProperty(r, "stated", 1)
+                        && !matchesIntProperty(r, "gciAxiom", 1)){
                     dsnDescription.add(r.getEndNode().getProperty("fsn").toString());
                 }
             return dsnDescription;
