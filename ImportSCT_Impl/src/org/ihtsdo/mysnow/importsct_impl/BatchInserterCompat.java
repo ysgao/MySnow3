@@ -7,6 +7,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.schema.IndexDefinition;
 
 final class BatchInserterCompat implements AutoCloseable {
     private final GraphDatabaseService graphDb;
@@ -67,6 +68,14 @@ final class BatchInserterCompat implements AutoCloseable {
     void createSchemaIndex(Label label, String propertyKey) {
         flush();
         try (Transaction schemaTx = graphDb.beginTx()) {
+            for (IndexDefinition indexDefinition : schemaTx.schema().getIndexes(label)) {
+                for (String existingKey : indexDefinition.getPropertyKeys()) {
+                    if (propertyKey.equals(existingKey)) {
+                        schemaTx.commit();
+                        return;
+                    }
+                }
+            }
             schemaTx.schema().indexFor(label).on(propertyKey).create();
             schemaTx.commit();
         }

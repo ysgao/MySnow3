@@ -613,8 +613,53 @@ public class QuerySCTimpl implements QuerySCT {
            List<ModelEntry> entries = new ArrayList<>();
            for(Relationship r: txNode.getRelationships(Direction.OUTGOING)){
                RelationshipType reltype= r.getType();                    
-               if(r.hasProperty("rg") && (int)r.getProperty("stated")==0 && !reltype.name().equals("Is a")){                   
+               if(r.hasProperty("rg") && r.hasProperty("stated") && (int)r.getProperty("stated")==0 && !reltype.name().equals("Is a")){                   
                     int rg = Integer.parseInt(r.getProperty("rg").toString());                  
+                    Node endNode = r.getEndNode();
+                    String nodeinfo;
+                    if (endNode.hasProperty("fsn")) {
+                        nodeinfo = endNode.getProperty("fsn").toString();
+                    } else if (endNode.hasProperty("value")) {
+                        nodeinfo = endNode.getProperty("value").toString();
+                        if (nodeinfo.startsWith("#")) {
+                            nodeinfo = nodeinfo.substring(1);
+                        }
+                        if (nodeinfo.length() >= 2 && nodeinfo.startsWith("\"") && nodeinfo.endsWith("\"")) {
+                            nodeinfo = nodeinfo.substring(1, nodeinfo.length() - 1);
+                        }
+                    } else {
+                        nodeinfo = String.valueOf(endNode.getId());
+                    }
+                    entries.add(new ModelEntry(rg, reltype.name(), nodeinfo));
+                }
+        }
+
+        Collections.sort(entries, Comparator
+                .comparingInt((ModelEntry e) -> e.rg == 0 ? 0 : 1)
+                .thenComparingInt(e -> getAttributeRank(e.relName, profile))
+                .thenComparingInt(e -> e.rg == 0 ? 0 : e.rg)
+                .thenComparing(e -> e.relName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(e -> e.nodeInfo, String.CASE_INSENSITIVE_ORDER));
+
+        for (ModelEntry entry : entries) {
+            models.add("RG [" + entry.rg + "]  " + entry.relName + " = " + entry.nodeInfo);
+        }
+
+        return models;
+    }
+
+    @Override
+    public Collection<String> getStatedModels(Node node){
+        Collection<String> models= new ArrayList<String>();
+           Transaction tx = getTx();
+           Node txNode = reattach(node, tx);
+           String conceptFsn = txNode.hasProperty("fsn") ? txNode.getProperty("fsn").toString() : "";
+           ModelOrderProfile profile = detectModelOrderProfile(conceptFsn);
+           List<ModelEntry> entries = new ArrayList<>();
+           for(Relationship r: txNode.getRelationships(Direction.OUTGOING)){
+               RelationshipType reltype= r.getType();
+               if(r.hasProperty("rg") && r.hasProperty("stated") && (int)r.getProperty("stated")==1 && !reltype.name().equals("Is a")){
+                    int rg = Integer.parseInt(r.getProperty("rg").toString());
                     Node endNode = r.getEndNode();
                     String nodeinfo;
                     if (endNode.hasProperty("fsn")) {
@@ -1434,20 +1479,24 @@ public class QuerySCTimpl implements QuerySCT {
         try(Transaction tx=graphDB.beginTx()){
             Collection<String> dsnDescription = new HashSet<String>();
             Node txNode = reattach(sctnode, tx);
-//            Traverser directSuperTrav = getDirectSuperTraverser(sctnode);
-//            for(Path subPath: directSuperTrav){
-//                if((int)subPath.lastRelationship().getProperty("stated")==0){
             for(Relationship r : txNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("Is a")))
                 if((int)r.getProperty("stated")==0){
                     dsnDescription.add(r.getEndNode().getProperty("fsn").toString());
                 }
-//            if(dsnDescription.isEmpty()){
-//                for(Relationship r : sctnode.getRelationships(Direction.OUTGOING, RelationshipType.withName("Is a")))
-//                if((int)r.getProperty("stated")==1){
-//                    dsnDescription.add(r.getEndNode().getProperty("fsn").toString() + "-stated ");
-//                }
-//            }
         return dsnDescription;
+        }
+    }
+
+    @Override
+    public Collection<String> getStatedParentNodeDescrition(Node sctnode){
+        try(Transaction tx=graphDB.beginTx()){
+            Collection<String> dsnDescription = new HashSet<String>();
+            Node txNode = reattach(sctnode, tx);
+            for(Relationship r : txNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("Is a")))
+                if((int)r.getProperty("stated")==1){
+                    dsnDescription.add(r.getEndNode().getProperty("fsn").toString());
+                }
+            return dsnDescription;
         }
     }
     

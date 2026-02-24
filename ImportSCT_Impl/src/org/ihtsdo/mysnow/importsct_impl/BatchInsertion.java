@@ -18,8 +18,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.ihtsdo.mysnow.importsct_api.ImportSCT;
 import org.ihtsdo.mysnow.neo4j.EmbeddedDbManager;
 import org.ihtsdo.mysnow.neo4j.Neo4jConfig;
@@ -90,7 +92,7 @@ private String intreldate = null;
 private String conceptPathINT = null;
 private String relPathINT = null;
 private String relConcretePathINT = null;
-private String statedRelPath = null;
+private String owlExpressionPathINT = null;
 private String descPathINT = null;
 private String textDefinitionPath = null;
 private String simpleMapPath = null;
@@ -157,6 +159,103 @@ private String langPath = null;
             return fsn.substring(0, idx);
         }
         return fsn;
+    }
+
+    private static final class OwlRelationKey {
+        private final long typeId;
+        private final Long destinationId;
+        private final String concreteValue;
+        private final int roleGroup;
+
+        private OwlRelationKey(long typeId, Long destinationId, String concreteValue, int roleGroup) {
+            this.typeId = typeId;
+            this.destinationId = destinationId;
+            this.concreteValue = concreteValue;
+            this.roleGroup = roleGroup;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = Long.hashCode(typeId);
+            hash = 31 * hash + (destinationId == null ? 0 : Long.hashCode(destinationId));
+            hash = 31 * hash + (concreteValue == null ? 0 : concreteValue.hashCode());
+            hash = 31 * hash + Integer.hashCode(roleGroup);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof OwlRelationKey)) {
+                return false;
+            }
+            OwlRelationKey other = (OwlRelationKey) obj;
+            return typeId == other.typeId
+                    && (destinationId == null ? other.destinationId == null : destinationId.equals(other.destinationId))
+                    && (concreteValue == null ? other.concreteValue == null : concreteValue.equals(other.concreteValue))
+                    && roleGroup == other.roleGroup;
+        }
+    }
+
+    private static final class OwlNode {
+        private final String symbol;
+        private final Long conceptId;
+        private final String literal;
+        private final List<OwlNode> children = new ArrayList<>();
+
+        private OwlNode(String symbol, Long conceptId, String literal) {
+            this.symbol = symbol;
+            this.conceptId = conceptId;
+            this.literal = literal;
+        }
+
+        private boolean isConcept() {
+            return conceptId != null;
+        }
+
+        private boolean isLiteral() {
+            return literal != null;
+        }
+    }
+
+    private static final class OwlToken {
+        private final String text;
+
+        private OwlToken(String text) {
+            this.text = text;
+        }
+    }
+
+    private static final class OwlTokenReader {
+        private final List<OwlToken> tokens;
+        private int index;
+
+        private OwlTokenReader(List<OwlToken> tokens) {
+            this.tokens = tokens;
+            this.index = 0;
+        }
+
+        private boolean hasNext() {
+            return index < tokens.size();
+        }
+
+        private String peek() {
+            return hasNext() ? tokens.get(index).text : null;
+        }
+
+        private String next() {
+            return hasNext() ? tokens.get(index++).text : null;
+        }
+
+        private boolean consume(String expected) {
+            if (expected.equals(peek())) {
+                index++;
+                return true;
+            }
+            return false;
+        }
     }
 
 @Override    
@@ -942,6 +1041,480 @@ public void importRelationshipConcreteValues(String relConcreteFilePath) throws 
     }
 }
 
+@Override
+public void importOwlExpressionRefset(String owlExpressionFilePath) throws IOException {
+    if (owlExpressionFilePath == null || owlExpressionFilePath.trim().isEmpty()) {
+        throw new IOException("OWL expression file path is null or empty");
+    }
+
+    File owlFile = new File(owlExpressionFilePath);
+    if (!owlFile.exists()) {
+        throw new IOException("OWL expression file does not exist: " + owlExpressionFilePath);
+    }
+
+    io.getOut().println("Starting OWL expression import from: " + owlExpressionFilePath);
+
+    try {
+        graphDB = dbManager.start(Neo4jConfig.load());
+        inserter = new BatchInserterCompat(graphDB, BATCH_SIZE);
+        inserter.createSchemaIndex(concreteValueLabel, "value");
+        loadAttributeMapIfEmpty();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(owlExpressionFilePath), "UTF-8"))) {
+            String line;
+            int curLineNr = 1;
+            int skipLines = 1;
+            int imported = 0;
+            int skipped = 0;
+            int processed = 0;
+            int activeRows = 0;
+            final int ROW_PROGRESS_INTERVAL = 500;
+            final int REL_PROGRESS_INTERVAL = 5000;
+            int nextRelProgress = REL_PROGRESS_INTERVAL;
+
+            while ((line = reader.readLine()) != null) {
+                if (curLineNr++ <= skipLines) {
+                    continue;
+                }
+                processed++;
+
+                String[] datavalue = line.split("\t", -1);
+                if (datavalue.length < 7) {
+                    skipped++;
+                    if (processed % 10000 == 0) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                    }
+                    continue;
+                }
+
+                String relid = datavalue[0];
+                int effectiveTime;
+                int active;
+                long moduleid;
+                long sourceid;
+                String owlExpression = datavalue[6];
+
+                try {
+                    effectiveTime = Integer.parseInt(datavalue[1]);
+                    active = Integer.parseInt(datavalue[2]);
+                    moduleid = Long.parseLong(datavalue[3]);
+                    sourceid = Long.parseLong(datavalue[5]);
+                } catch (NumberFormatException ex) {
+                    skipped++;
+                    continue;
+                }
+
+                if (active != 1 || owlExpression == null || owlExpression.trim().isEmpty()) {
+                    if (processed % 10000 == 0) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                    }
+                    continue;
+                }
+                activeRows++;
+
+                if (owlExpression.length() > 50000) {
+                    skipped++;
+                    if (processed % 10000 == 0) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                    }
+                    continue;
+                }
+
+                Long sourceNodeId = resolveConceptNodeId(sourceid);
+                if (sourceNodeId == null) {
+                    skipped++;
+                    if (processed % 10000 == 0) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                    }
+                    continue;
+                }
+
+                Set<OwlRelationKey> statedRelationships;
+                try {
+                    statedRelationships = parseOwlRelationships(owlExpression);
+                } catch (RuntimeException ex) {
+                    skipped++;
+                    if (processed % ROW_PROGRESS_INTERVAL == 0) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                    }
+                    continue;
+                }
+                if (statedRelationships.isEmpty()) {
+                    skipped++;
+                    if (processed % ROW_PROGRESS_INTERVAL == 0) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                    }
+                    continue;
+                }
+                if (statedRelationships.size() > 2000) {
+                    skipped++;
+                    if (processed % ROW_PROGRESS_INTERVAL == 0) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped + " (row skipped due to excessive relationships)");
+                    }
+                    continue;
+                }
+
+                int relsImportedForRow = 0;
+                for (OwlRelationKey rel : statedRelationships) {
+                    Long destinationNodeId;
+                    if (rel.destinationId != null) {
+                        if (rel.destinationId == sourceid) {
+                            continue;
+                        }
+                        destinationNodeId = resolveConceptNodeId(rel.destinationId);
+                        if (destinationNodeId == null) {
+                            continue;
+                        }
+                    } else if (rel.concreteValue != null) {
+                        destinationNodeId = inserter.findNodeId(concreteValueLabel, "value", rel.concreteValue);
+                        if (destinationNodeId == null) {
+                            Map<String, Object> valueProperties = new HashMap<>();
+                            valueProperties.put("value", rel.concreteValue);
+                            destinationNodeId = inserter.createNode(valueProperties, concreteValueLabel);
+                        }
+                    } else {
+                        continue;
+                    }
+
+                    String relName;
+                    if (rel.typeId == 116680003L) {
+                        relName = "Is a";
+                    } else {
+                        relName = resolveRelationshipTypeName(rel.typeId);
+                    }
+
+                    Map<String, Object> statedProperties = new HashMap<>();
+                    statedProperties.put("relid", relid);
+                    statedProperties.put("effectiveTime", effectiveTime);
+                    statedProperties.put("active", active);
+                    statedProperties.put("modulieid", moduleid);
+                    statedProperties.put("rg", rel.roleGroup);
+                    statedProperties.put("reltype", rel.typeId);
+                    statedProperties.put("character", 900000000000011006L);
+                    statedProperties.put("modifier", 900000000000451002L);
+                    statedProperties.put("stated", 1);
+                    statedProperties.put("owlAxiom", 1);
+
+                    RelationshipType statedRelType = RelationshipType.withName(relName);
+                    inserter.createRelationship(sourceNodeId, destinationNodeId, statedRelType, statedProperties);
+                    imported++;
+                    relsImportedForRow++;
+                    if (imported >= nextRelProgress) {
+                        io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                        nextRelProgress += REL_PROGRESS_INTERVAL;
+                    }
+                    if (relsImportedForRow >= 2000) {
+                        break;
+                    }
+                }
+
+                if (processed % ROW_PROGRESS_INTERVAL == 0) {
+                    io.getOut().println("OWL import progress: rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+                }
+            }
+
+            io.getOut().println("OWL stated relationship import complete. Rows=" + processed + ", activeRows=" + activeRows + ", importedRels=" + imported + ", skipped=" + skipped);
+        }
+    } finally {
+        if (inserter != null) {
+            inserter.shutdown();
+        }
+        dbManager.shutdown();
+    }
+}
+
+private void loadAttributeMapIfEmpty() {
+    if (!attmap.isEmpty()) {
+        return;
+    }
+    try (Transaction tx = graphDB.beginTx()) {
+        Node attnode = tx.findNode(conceptLabel, SCTID_KEY, 410662002L);
+        if (attnode != null) {
+            Traverser allattnodes = getISAExcludeStartTraverser(attnode, tx);
+            for (org.neo4j.graphdb.Path subpath : allattnodes) {
+                String attid = subpath.endNode().getProperty(SCTID_KEY).toString();
+                String attFsn = subpath.endNode().getProperty("fsn").toString();
+                attmap.put(attid, stripSemanticTag(attFsn));
+            }
+        }
+        tx.commit();
+    }
+}
+
+private String resolveRelationshipTypeName(long reltype) {
+    String relKey = String.valueOf(reltype);
+    String relName = attmap.get(relKey);
+    if (relName != null && !relName.trim().isEmpty()) {
+        return relName;
+    }
+    Long relTypeNodeId = resolveConceptNodeId(reltype);
+    if (relTypeNodeId != null) {
+        Object fsnValue = inserter.getNodeProperty(relTypeNodeId, "fsn");
+        relName = stripSemanticTag(fsnValue == null ? null : fsnValue.toString());
+        if (relName != null && !relName.trim().isEmpty()) {
+            attmap.put(relKey, relName);
+            return relName;
+        }
+    }
+    return "RelType_" + relKey;
+}
+
+private Set<OwlRelationKey> parseOwlRelationships(String owlExpression) {
+    Set<OwlRelationKey> result = new LinkedHashSet<>();
+    List<OwlToken> tokens = tokenizeOwl(owlExpression);
+    if (tokens.isEmpty()) {
+        return result;
+    }
+    if (tokens.size() > 8000) {
+        return result;
+    }
+    OwlTokenReader reader = new OwlTokenReader(tokens);
+    int safety = 0;
+    int maxSafety = (tokens.size() * 4) + 100;
+
+    while (reader.hasNext() && safety++ < maxSafety) {
+        String token = reader.peek();
+        if ("SubClassOf".equals(token) || "EquivalentClasses".equals(token)) {
+            OwlNode axiom = parseNode(reader);
+            if (axiom != null) {
+                extractAxiomRelationships(axiom, result);
+            }
+        } else {
+            reader.next();
+        }
+    }
+    return result;
+}
+
+    private List<OwlToken> tokenizeOwl(String text) {
+        List<OwlToken> tokens = new ArrayList<>();
+        if (text == null) {
+            return tokens;
+        }
+    int i = 0;
+        while (i < text.length()) {
+            char ch = text.charAt(i);
+            if (Character.isWhitespace(ch)) {
+                i++;
+                continue;
+            }
+            if (ch == '"') {
+                int j = i + 1;
+                boolean escaped = false;
+                while (j < text.length()) {
+                    char cj = text.charAt(j);
+                    if (cj == '"' && !escaped) {
+                        j++;
+                        break;
+                    }
+                    escaped = (cj == '\\') && !escaped;
+                    if (cj != '\\') {
+                        escaped = false;
+                    }
+                    j++;
+                }
+                tokens.add(new OwlToken(text.substring(i, Math.min(j, text.length()))));
+                i = j;
+                continue;
+            }
+            if (ch == '(' || ch == ')') {
+                tokens.add(new OwlToken(String.valueOf(ch)));
+                i++;
+                continue;
+            }
+            if (ch == '^' && i + 1 < text.length() && text.charAt(i + 1) == '^') {
+                tokens.add(new OwlToken("^^"));
+                i += 2;
+                continue;
+            }
+            if (ch == ':') {
+                int j = i + 1;
+                while (j < text.length() && Character.isDigit(text.charAt(j))) {
+                    j++;
+                }
+            if (j > i + 1) {
+                tokens.add(new OwlToken(text.substring(i, j)));
+                i = j;
+                continue;
+            }
+            }
+            if (Character.isLetter(ch)) {
+                int j = i + 1;
+                while (j < text.length() && (Character.isLetterOrDigit(text.charAt(j)) || text.charAt(j) == '_')) {
+                    j++;
+                }
+                if (j < text.length() && text.charAt(j) == ':') {
+                    j++;
+                    while (j < text.length() && (Character.isLetterOrDigit(text.charAt(j)) || text.charAt(j) == '_')) {
+                        j++;
+                    }
+                }
+                tokens.add(new OwlToken(text.substring(i, j)));
+                i = j;
+                continue;
+            }
+            i++;
+    }
+    return tokens;
+}
+
+    private OwlNode parseNode(OwlTokenReader reader) {
+        String token = reader.next();
+        if (token == null) {
+            return null;
+        }
+
+        if (token.startsWith(":") && token.length() > 1) {
+            try {
+                return new OwlNode(null, Long.parseLong(token.substring(1)), null);
+            } catch (NumberFormatException ex) {
+                return null;
+            }
+        }
+
+        if (token.length() >= 2 && token.startsWith("\"") && token.endsWith("\"")) {
+            return new OwlNode(null, null, token.substring(1, token.length() - 1));
+        }
+
+    if ("SubClassOf".equals(token) || "EquivalentClasses".equals(token)
+            || "ObjectIntersectionOf".equals(token) || "ObjectSomeValuesFrom".equals(token)
+            || "DataHasValue".equals(token)) {
+        OwlNode node = new OwlNode(token, null, null);
+        if (!reader.consume("(")) {
+            return node;
+        }
+        int childSafety = 0;
+        while (reader.hasNext() && !")".equals(reader.peek()) && childSafety++ < 10000) {
+            OwlNode child = parseNode(reader);
+            if (child != null) {
+                node.children.add(child);
+            } else {
+                reader.next();
+            }
+        }
+        reader.consume(")");
+        return node;
+    }
+
+    if ("(".equals(token)) {
+        OwlNode wrapper = new OwlNode("GROUP", null, null);
+        int childSafety = 0;
+        while (reader.hasNext() && !")".equals(reader.peek()) && childSafety++ < 10000) {
+            OwlNode child = parseNode(reader);
+            if (child != null) {
+                wrapper.children.add(child);
+            } else {
+                reader.next();
+            }
+        }
+        reader.consume(")");
+        return wrapper;
+    }
+
+    if (")".equals(token)) {
+        return null;
+    }
+
+    return new OwlNode(token, null, null);
+}
+
+private void extractAxiomRelationships(OwlNode axiom, Set<OwlRelationKey> out) {
+    if (axiom == null || axiom.children.isEmpty()) {
+        return;
+    }
+    if ("SubClassOf".equals(axiom.symbol)) {
+        if (axiom.children.size() >= 2) {
+            extractFromClassExpression(axiom.children.get(1), out, new int[]{1}, 0);
+        }
+    } else if ("EquivalentClasses".equals(axiom.symbol)) {
+        for (OwlNode child : axiom.children) {
+            extractFromClassExpression(child, out, new int[]{1}, 0);
+        }
+    }
+}
+
+private void extractFromClassExpression(OwlNode node, Set<OwlRelationKey> out, int[] nextRoleGroup, int roleGroup) {
+    if (node == null) {
+        return;
+    }
+    if (node.isConcept()) {
+        if (node.conceptId != null && node.conceptId != 609096000L) {
+            out.add(new OwlRelationKey(116680003L, node.conceptId, null, 0));
+        }
+        return;
+    }
+
+    if ("ObjectIntersectionOf".equals(node.symbol) || "EquivalentClasses".equals(node.symbol) || "GROUP".equals(node.symbol)) {
+        for (OwlNode child : node.children) {
+            extractFromClassExpression(child, out, nextRoleGroup, roleGroup);
+        }
+        return;
+    }
+
+    if ("ObjectSomeValuesFrom".equals(node.symbol) && node.children.size() >= 2) {
+        OwlNode typeNode = node.children.get(0);
+        OwlNode valueNode = node.children.get(1);
+        if (typeNode != null && typeNode.isConcept() && typeNode.conceptId != null) {
+            long typeId = typeNode.conceptId;
+            if (typeId == 609096000L) {
+                int groupId = nextRoleGroup[0]++;
+                extractRoleGroupValue(valueNode, out, nextRoleGroup, groupId);
+                return;
+            }
+            if (valueNode != null && valueNode.isConcept() && valueNode.conceptId != null) {
+                out.add(new OwlRelationKey(typeId, valueNode.conceptId, null, roleGroup));
+                return;
+            }
+        }
+        extractFromClassExpression(valueNode, out, nextRoleGroup, roleGroup);
+        return;
+    }
+
+    if ("DataHasValue".equals(node.symbol) && node.children.size() >= 2) {
+        OwlNode typeNode = node.children.get(0);
+        OwlNode valueNode = node.children.get(1);
+        if (typeNode != null && typeNode.isConcept() && typeNode.conceptId != null && valueNode != null && valueNode.isLiteral()) {
+            String datatype = null;
+            for (int i = 2; i < node.children.size(); i++) {
+                OwlNode extra = node.children.get(i);
+                if (extra != null && extra.symbol != null && extra.symbol.contains(":")) {
+                    datatype = extra.symbol;
+                    break;
+                }
+            }
+            String concreteValue = normalizeConcreteValue(valueNode.literal, datatype);
+            out.add(new OwlRelationKey(typeNode.conceptId, null, concreteValue, roleGroup));
+        }
+    }
+}
+
+private String normalizeConcreteValue(String literal, String datatype) {
+    if (literal == null) {
+        return null;
+    }
+    String value = literal.trim();
+    String dt = datatype == null ? "" : datatype.toLowerCase();
+    boolean numeric = dt.endsWith(":decimal") || dt.endsWith(":integer") || dt.endsWith(":int")
+            || dt.endsWith(":long") || dt.endsWith(":float") || dt.endsWith(":double");
+    if (numeric) {
+        return "#" + value;
+    }
+    return "\"" + value + "\"";
+}
+
+private void extractRoleGroupValue(OwlNode node, Set<OwlRelationKey> out, int[] nextRoleGroup, int roleGroup) {
+    if (node == null) {
+        return;
+    }
+    if ("ObjectIntersectionOf".equals(node.symbol) || "GROUP".equals(node.symbol)) {
+        for (OwlNode child : node.children) {
+            extractRoleGroupValue(child, out, nextRoleGroup, roleGroup);
+        }
+        return;
+    }
+    extractFromClassExpression(node, out, nextRoleGroup, roleGroup);
+}
+
 public void importStatedRelationships(String statedRelPath) throws IOException {
     //import stated is a relationship only 
 
@@ -1336,6 +1909,11 @@ public void setReleaseFiles(FileObject folder) {
                     io.getOut().println("Found relationship file: " + relPathINT);
                 }
             }
+            else if (fileName.contains("owlexpress") && fileName.contains("snapshot") &&
+                     fileName.contains("int") && fileName.endsWith(".txt")) {
+                owlExpressionPathINT = fullPath;
+                io.getOut().println("Found OWL expression refset file: " + owlExpressionPathINT);
+            }
             else if (fileName.contains("textdefinition") && fileName.contains("snapshot") && 
                      fileName.contains("int") && fileName.contains("en") && fileName.endsWith(".txt")) {
                 textDefinitionPath = fullPath;
@@ -1381,6 +1959,9 @@ public void setReleaseFiles(FileObject folder) {
             io.getOut().println("Please ensure all SNOMED CT files are present in the selected directory.");
         } else {
             io.getOut().println("All required files found successfully.");
+            if (owlExpressionPathINT == null) {
+                io.getOut().println("Warning: OWL expression refset file not found. Stated OWL relationships will not be imported.");
+            }
         }
         io.getOut().close();
     }
@@ -1488,6 +2069,11 @@ public String getRelPathINT(){
 @Override
 public String getRelConcretePathINT(){
         return relConcretePathINT;
+    }
+
+@Override
+public String getOwlExpressionPathINT(){
+        return owlExpressionPathINT;
     }
     
 @Override

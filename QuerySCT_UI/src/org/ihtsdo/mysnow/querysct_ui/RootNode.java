@@ -195,6 +195,10 @@ public class RootNode extends AbstractNode {
         return querysct.getParentNodeDescrition(sctnode);
         
     }
+
+    public Collection<String> getStatedParentDescription(){
+        return querysct.getStatedParentNodeDescrition(sctnode);
+    }
     
     public Collection<String> getPrimitiveParentDescription(){
         return querysct.getPrimitiveParentDescription(sctnode);
@@ -220,6 +224,10 @@ public class RootNode extends AbstractNode {
     
     public Collection<String> getModels(){
         return querysct.getModels(sctnode);
+    }
+
+    public Collection<String> getStatedModels(){
+        return querysct.getStatedModels(sctnode);
     }
 
     @Override

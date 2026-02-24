@@ -72,6 +72,7 @@ public interface QuerySCT {
  //   public Collection<String> getRGs(Node node);
     
     public Collection<String> getModels(Node node);
+    public Collection<String> getStatedModels(Node node);
     
     /*
      * @method Return String FSN by the input of string concept ID
@@ -104,6 +105,7 @@ public interface QuerySCT {
     public Collection<Node> getDirectSuperNodes(Node sctnode);
     
     public Collection<String> getParentNodeDescrition(Node sctnode);
+    public Collection<String> getStatedParentNodeDescrition(Node sctnode);
     
     public Collection<String> getPrimitiveParentDescription(Node sctnode);
     

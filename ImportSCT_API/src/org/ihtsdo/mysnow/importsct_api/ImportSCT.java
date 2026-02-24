@@ -28,6 +28,7 @@ public interface ImportSCT {
     public void importRefsetLangauge(String LangFilePath) throws IOException;
     public void importRelationships(String relfilepath) throws IOException;
     public void importRelationshipConcreteValues(String relConcreteFilePath) throws IOException;
+    public void importOwlExpressionRefset(String owlExpressionFilePath) throws IOException;
     public void assignCounts();
 
     public void releaseVersion(String release);
@@ -35,6 +36,7 @@ public interface ImportSCT {
     public String getConceptPathINT();
     public String getRelPathINT();
     public String getRelConcretePathINT();
+    public String getOwlExpressionPathINT();
     public String getDescPathINT();
     public String getSimpleMapPath();
     public String getLangPath();

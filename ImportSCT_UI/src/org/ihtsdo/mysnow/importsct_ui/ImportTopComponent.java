@@ -93,6 +93,7 @@ public final class ImportTopComponent extends TopComponent {
     private void importINTRel() throws IOException{
         String relPathINT = importsct.getRelPathINT();
         String relConcretePathINT = importsct.getRelConcretePathINT();
+        String owlExpressionPathINT = importsct.getOwlExpressionPathINT();
         
         if (relPathINT == null || relPathINT.trim().isEmpty()) {
             io.getOut().println("ERROR: Relationship file path is not set. Please select a valid directory first.");
@@ -110,6 +111,12 @@ public final class ImportTopComponent extends TopComponent {
                 importsct.importRelationshipConcreteValues(relConcretePathINT);
             } else {
                 io.getOut().println("Concrete values relationship file not found - skipping");
+            }
+            if (owlExpressionPathINT != null && !owlExpressionPathINT.trim().isEmpty()) {
+                io.getOut().println("OWL expression refset file: " + owlExpressionPathINT);
+                importsct.importOwlExpressionRefset(owlExpressionPathINT);
+            } else {
+                io.getOut().println("OWL expression refset file not found - skipping stated OWL relationship import");
             }
         } catch (IOException e) {
             io.getOut().println("ERROR during relationship import: " + e.getMessage());
