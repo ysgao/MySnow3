@@ -1,0 +1,130 @@
+ What caused the issue:
+  Based on error.txt, the application (a NetBeans RCP app) ran into a known deadlock between the macOS native UI thread (AppKit) and the Java
+  Event Dispatch Thread (EDT). The deadlock triggered specifically when macOS accessibility features attempt to query the Java application for
+  the currently selected text (AWTView accessibilitySelectedText) while the QuickSearch Command is running.
+
+
+  How it was fixed:
+  I added a known JVM workaround to disable macOS Java assistive technologies, preventing this deadlock from occurring.
+   1. I duplicated the default MySnow-2026.conf template from the build into app.conf in the project root.
+   2. I updated the default_options within app.conf to include -J-Djavax.accessibility.assistive_technologies=java.lang.Object.
+   3. I configured nbproject/project.properties to ensure the new app.conf is bundled correctly when packaged (app.conf=app.conf), and that the
+      same arguments are used when running directly from the IDE
+      (run.args.extra=-J-Djavax.accessibility.assistive_technologies=java.lang.Object).
+   4. I ran a build to ensure the modifications were integrated cleanly.
+
+
+  The application should now run and search without freezing on macOS.
+---------------------------
+
+  What caused the issue:
+  The freeze wasn't just related to java.accessibility or the .conf file. When you select a result from the QuickSearch dropdown, the application
+  executes ExplorerTopComponent.setExplorerRoot(node) on the Java UI thread (the Event Dispatch Thread).
+
+
+  Because setExplorerRoot performs a heavy synchronous database read to compute child nodes (getNodes(true)), it blocks the UI thread. On macOS,
+  if the Java UI thread is blocked while a native AppKit popup menu is trying to dismiss, it triggers a classic Swing/AppKit deadlock. The native
+  Mac UI thread freezes waiting for the Java UI thread to finish, and the Java thread freezes.
+
+
+  How it was fixed:
+  I wrote a Python script to patch all 21 SearchProvider implementations in your QuerySCT_UI module (e.g., SctSearchProvider.java,
+  SctSocialProvider.java, etc.).
+
+
+  I wrapped the setExplorerRoot execution inside javax.swing.SwingUtilities.invokeLater. This queues the heavy database operation to run after
+  the current event finishes processing. This small timing change allows the macOS QuickSearch popup menu to fully close and return control to
+  the native Mac UI thread before your application starts querying Neo4j.
+
+
+  Finally, I ran bash ./tools/build-mac-fixed.sh which completed successfully and generated the new .dmg and .app files in your dist/ directory.
+
+  ---------------------------
+
+   What caused the issue:
+  When you typed in the Quick Search or expanded the ExplorerTopComponent, the app was exhausting its memory entirely, triggering a continuous,
+  "stop-the-world" Full Garbage Collection that froze the entire application.
+
+
+  There were two massive memory leaks built into the code:
+   1. Background Loading on the UI Thread: When the main ExplorerTopComponent opened, it fired LoadNodeCollections.loadCollections(); directly on
+      the Java UI Thread. This method queried the Neo4j database to load all finding and procedure nodes into memory, and then sorted them.
+      Worse, these collections were completely unused by the rest of the application! It was just eating memory and freezing the UI for no
+      reason.
+   2. QuickSearch Memory Hog: All 21 of your SearchProvider implementations (e.g., SctSearchProvider, SctEnvironmentProvider, etc.) were loading
+      their respective entire SNOMED CT subgraphs into a Java Collection<Node> array (querysct.getAllSctNodes) on every single keystroke. When
+      you type in the Quick Search bar, 21 categories query the graph at once, loading millions of node objects into memory and crashing the JVM.
+
+
+  How it was fixed:
+   1. I removed the dead-code call to LoadNodeCollections.loadCollections() from ExplorerTopComponent.java so that it doesn't freeze the UI on
+      startup or eat up your RAM.
+   2. I wrote a Python script to refactor all 21 SearchProvider implementations in the QuerySCT_UI module. I replaced the memory-crashing
+      getAllSctNodes collection with querysct.getAllSctNodeIterator(...). By using a lazy Java Iterator, the app will now traverse the graph
+      iteratively without needing to buffer the entire ontology into memory at once.
+   3. I ran the bash ./tools/build-mac-fixed.sh script to successfully recompile the changes and generate the new fixed App and DMG files.
+
+   -------------------------
+
+   I've investigated further and found the final piece of the puzzle. The issue isn't just about memory—it's a thread-blocking problem directly related to how the application
+  updates the UI after a search result is clicked.
+
+
+  What caused the issue:
+  When you select a search result from the QuickSearch dropdown, the application calls ExplorerTopComponent.setExplorerRoot(node) on the Java UI Thread (EDT) to update the
+  explorer view.
+
+
+  Inside that method, the code tries to automatically expand the tree to show the parents and children of the selected node by calling getNodes(true). The true parameter
+  explicitly tells NetBeans to block the thread and wait until all the child nodes are fully calculated from the Neo4j database. Since this was running on the UI thread, the
+  entire macOS interface froze while it queried the database and built the tree hierarchy for the selected SNOMED CT concept.
+
+
+  How it was fixed:
+  I rewrote the setExplorerRoot method in ExplorerTopComponent.java to perform the heavy lifting on a background thread:
+
+
+   1. The method now pushes the blocking getNodes(true) calculations to NetBeans' background RequestProcessor (RP.post(...)).
+   2. The UI thread is immediately freed up, allowing the QuickSearch popup to dismiss smoothly without freezing the app.
+   3. Once the background thread finishes calculating the tree hierarchy from Neo4j, it safely schedules just the final visual expansion (btv.expandNode) back onto the UI
+      thread.
+
+
+--------------------
+
+I have investigated and resolved the issue where inferred relationships and their hierarchy were missing from the Concept Details Window.
+
+
+  What caused the issue:
+  The application was silently failing when trying to read the inferred relationships from the local Neo4j database.
+  In the QuerySCTimpl.java database querying logic, the application checked if a relationship was inferred by attempting to cast the database property directly to a Java
+  integer like this: (int) r.getProperty("stated") == 0.
+
+
+  However, depending on how the SNOMED CT RF2 release was imported, the Neo4j database engine often optimizes and returns numeric properties as Long objects instead of Integer.
+  When this happens, Java throws a silent ClassCastException in the background, which aborts the processing of the tree nodes (hierarchy) and the relationship models for the
+  ConceptDetailsWindow.
+
+
+  Because stated relationships were already using a safer helper method (matchesIntProperty) to check properties, they were unaffected by this bug.
+
+
+  How it was fixed:
+   1. I wrote a Python script (fix_class_cast.py) to systematically update QuerySCT_Impl/src/org/ihtsdo/mysnow/querysct_impl/QuerySCTimpl.java.
+   2. I replaced all fragile (int) r.getProperty("stated") == 0 casts with the robust matchesIntProperty(r, "stated", 0) method, which properly handles Long/Integer variations
+      as well as gracefully handles missing properties.
+   3. I recompiled the QuerySCT_Impl module and packaged the full macOS application again using ./tools/build-mac-fixed.sh.
+
+---------------------------
+
+  What was done:
+  I performed a global rebranding of the project from MySnow2 to MySnow3. This involved:
+   1. Replacing all occurrences of "mysnow2" and "MySnow2" with "mysnow3" and "MySnow3" across the entire codebase, including configuration files, Java source code, and documentation.
+   2. Updating the `branding.token` in `platform.properties` to `mysnow3026` to reflect the versioning update.
+   3. Updating the default Neo4j configuration and storage paths to use the `.mysnow3` directory in the user's home folder.
+
+  Verification:
+  I ran the `bash ./tools/build-mac-fixed.sh` script, which completed successfully and generated the new `MySnow-2026-arm64.dmg` and `MySnow-2026.app` files in the `dist/` directory. The build process confirmed that all modules compiled correctly with the new rebranding and configuration changes.
+
+  Next Steps:
+  The application is now ready for testing with the updated branding and configuration paths.

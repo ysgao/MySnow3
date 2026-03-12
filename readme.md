@@ -1,9 +1,9 @@
-# MySnow2 Technical Specification
+# MySnow3 Technical Specification
 
 Last updated: 2026-02-06
 
 ## Overview
-MySnow2 is a NetBeans Platform application for visualizing SNOMED CT terminology. It imports SNOMED CT RF2 data into an embedded Neo4j database and provides:
+MySnow3 is a NetBeans Platform application for visualizing SNOMED CT terminology. It imports SNOMED CT RF2 data into an embedded Neo4j database and provides:
 1. Hierarchical taxonomy browsing (Explorer window).
 2. Concept details (FSN, PT/Synonyms, text definitions, modeling relationships, simple map refsets).
 3. QuickSearch across multiple SNOMED CT sub-hierarchies.
@@ -26,7 +26,7 @@ MySnow2 is a NetBeans Platform application for visualizing SNOMED CT terminology
 
 ## Core Data Paths
 1. Default Neo4j database location: `~/neo4j-sct3-store`.
-2. Neo4j config: `~/.mysnow2/neo4j.conf`.
+2. Neo4j config: `~/.mysnow3/neo4j.conf`.
 3. Config override: set system property `mysnow.neo4j.conf` to a custom file path.
 4. Page cache config key: `dbms.pagecache.memory` (MiB or GiB).
 
@@ -81,7 +81,7 @@ MySnow2 is a NetBeans Platform application for visualizing SNOMED CT terminology
 
 ## Key Custom Classes
 1. `EmbeddedDbManager` — Neo4j lifecycle and configuration.
-2. `Neo4jConfig` — reads config from `~/.mysnow2/neo4j.conf`.
+2. `Neo4jConfig` — reads config from `~/.mysnow3/neo4j.conf`.
 3. `BatchInserterCompat` — batched insert helper.
 4. `ExplorerTopComponent` — taxonomy tree.
 5. `ConceptDetailTopComponent` — concept details UI.

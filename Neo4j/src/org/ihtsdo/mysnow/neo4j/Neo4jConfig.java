@@ -7,7 +7,7 @@ import java.util.Properties;
 
 public final class Neo4jConfig {
     private static final String PROP_PAGECACHE = "dbms.pagecache.memory";
-    private static final String DEFAULT_CONFIG_PATH = System.getProperty("user.home") + "/.mysnow2/neo4j.conf";
+    private static final String DEFAULT_CONFIG_PATH = System.getProperty("user.home") + "/.mysnow3/neo4j.conf";
 
     private final File configFile;
     private final Long pageCacheMiB;
