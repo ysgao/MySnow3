@@ -613,9 +613,9 @@ public class QuerySCTimpl implements QuerySCT {
            ModelOrderProfile profile = detectModelOrderProfile(conceptFsn);
            List<ModelEntry> entries = new ArrayList<>();
            for(Relationship r: txNode.getRelationships(Direction.OUTGOING)){
-               RelationshipType reltype= r.getType();                    
-               if(r.hasProperty("rg") && r.hasProperty("stated") && (int)r.getProperty("stated")==0 && !reltype.name().equals("Is a")){                   
-                    int rg = Integer.parseInt(r.getProperty("rg").toString());                  
+               RelationshipType reltype= r.getType();
+               if(r.hasProperty("rg") && matchesIntProperty(r, "stated", 0) && !reltype.name().equals("Is a")){
+                    int rg = Integer.parseInt(r.getProperty("rg").toString());
                     Node endNode = r.getEndNode();
                     String nodeinfo;
                     if (endNode.hasProperty("fsn")) {
@@ -1643,7 +1643,7 @@ public class QuerySCTimpl implements QuerySCT {
             sctNodes.clear();
             Node txNode = reattach(sctnode, tx);
             for(Relationship r:txNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("Is a"))){
-                if((int)r.getProperty("stated")==0){
+                if(matchesIntProperty(r, "stated", 0)){
                 sctNodes.add(r.getEndNode());
                 }
             }
@@ -1657,7 +1657,7 @@ public class QuerySCTimpl implements QuerySCT {
             Collection<String> dsnDescription = new HashSet<String>();
             Node txNode = reattach(sctnode, tx);
             for(Relationship r : txNode.getRelationships(Direction.OUTGOING, RelationshipType.withName("Is a")))
-                if((int)r.getProperty("stated")==0){
+                if(matchesIntProperty(r, "stated", 0)){
                     dsnDescription.add(r.getEndNode().getProperty("fsn").toString());
                 }
         return dsnDescription;

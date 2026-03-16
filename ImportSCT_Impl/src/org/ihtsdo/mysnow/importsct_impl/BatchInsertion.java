@@ -1974,15 +1974,15 @@ public void setReleaseFiles(FileObject folder) {
                 descPathINT = fullPath;
                 io.getOut().println("Found description file: " + descPathINT);
             }
-            else if (fileName.contains("relationship") && fileName.contains("snapshot") &&
+            else if (fileName.startsWith("sct2_relationship_snapshot") &&
                      fileName.contains("int") && fileName.endsWith(".txt")) {
-                if (fileName.startsWith("sct2_relationshipconcretevalues_snapshot")) {
-                    relConcretePathINT = fullPath;
-                    io.getOut().println("Found concrete values relationship file: " + relConcretePathINT);
-                } else if (relPathINT == null) {
-                    relPathINT = fullPath;
-                    io.getOut().println("Found relationship file: " + relPathINT);
-                }
+                relPathINT = fullPath;
+                io.getOut().println("Found inferred relationship file: " + relPathINT);
+            }
+            else if (fileName.startsWith("sct2_relationshipconcretevalues_snapshot") &&
+                     fileName.contains("int") && fileName.endsWith(".txt")) {
+                relConcretePathINT = fullPath;
+                io.getOut().println("Found concrete values relationship file: " + relConcretePathINT);
             }
             else if (fileName.contains("owlexpress") && fileName.contains("snapshot") &&
                      fileName.contains("int") && fileName.endsWith(".txt")) {
