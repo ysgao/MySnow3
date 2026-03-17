@@ -14,3 +14,8 @@ To start a new track, create a directory in `conductor/tracks/<track_id>/` and f
 - `spec.md`: Technical specification.
 - `plan.md`: Implementation plan.
 - `metadata.json`: Track metadata.
+
+---
+
+- [ ] **Track: Move Neo4j Database to Library Folder**
+*Link: [./tracks/relocate_db_20260317/](./tracks/relocate_db_20260317/)*

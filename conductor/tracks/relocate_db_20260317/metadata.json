@@ -1,0 +1,8 @@
+{
+  "track_id": "relocate_db_20260317",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-03-17T00:00:00Z",
+  "updated_at": "2026-03-17T00:00:00Z",
+  "description": "The neo4j database neo4j-sct3-store is placed under user's folder. We should change the location to library for this application. This could avoid issues with access to folders in MacOS system."
+}
