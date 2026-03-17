@@ -53,7 +53,7 @@ public class BatchInsertionTest {
     public void tearDown() {
     }
 
-String filepath = System.getProperty("user.home") + "/neo4j-sct3-store";
+String filepath = System.getProperty("user.home") + "/Library/Application Support/MySnow-2026/neo4j-sct3-store";
 File inserter_store = new File(filepath);
 private final EmbeddedDbManager dbManager = new EmbeddedDbManager(inserter_store);
 private GraphDatabaseService graphDB;

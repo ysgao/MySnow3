@@ -17,5 +17,5 @@ To start a new track, create a directory in `conductor/tracks/<track_id>/` and f
 
 ---
 
-- [ ] **Track: Move Neo4j Database to Library Folder**
+- [x] **Track: Move Neo4j Database to Library Folder**
 *Link: [./tracks/relocate_db_20260317/](./tracks/relocate_db_20260317/)*

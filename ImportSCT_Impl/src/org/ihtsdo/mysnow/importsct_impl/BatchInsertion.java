@@ -118,8 +118,12 @@ private String langPath = null;
         this.descLabel = Label.label("Description");
         this.conceptLabel = Label.label("Concept");
 
-        this.filepath = System.getProperty("user.home")+"/neo4j-sct3-store";
+        this.filepath = System.getProperty("user.home") + "/Library/Application Support/MySnow-2026/neo4j-sct3-store";
         this.file_store = new File(filepath);
+        File parent = this.file_store.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
         this.File_Store_FO = FileUtil.toFileObject(file_store);
         this.dbManager = new EmbeddedDbManager(file_store);
         this.inserter = null;

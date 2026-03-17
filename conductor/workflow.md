@@ -17,7 +17,7 @@
 
 ## Data Management
 - **Embedded Database:**
-    - Location: `~/neo4j-sct3-store`
+    - Location: `~/Library/Application Support/MySnow-2026/neo4j-sct3-store`
     - To reset the data, delete this directory and trigger a re-import.
 - **Importing SNOMED CT:**
     - Use the `ImportSCT_UI` module within the running application to select an RF2 folder and start the import.

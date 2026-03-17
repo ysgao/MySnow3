@@ -56,9 +56,15 @@ import org.openide.windows.OutputWriter;
  */
 @ServiceProvider(service = QuerySCT.class)
 public class QuerySCTimpl implements QuerySCT {
-    private static final String DB_PATH = System.getProperty("user.home")+"/neo4j-sct3-store"; 
+    private static final String DB_PATH = System.getProperty("user.home") + "/Library/Application Support/MySnow-2026/neo4j-sct3-store"; 
 //    private static final String DB_PATH = "/graphstore/neo4j-sct-store"; 
     private static final File File_Store = new File(DB_PATH);
+    static {
+        File parent = File_Store.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+    }
     private static final EmbeddedDbManager dbManager = new EmbeddedDbManager(File_Store);
 //    private static final FileObject File_Store_FO = FileUtil.toFileObject(File_Store);
 //    private static final String DB_PATH = "D:/neo4j-sct-store";
