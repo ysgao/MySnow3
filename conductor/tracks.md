@@ -7,6 +7,9 @@ This registry tracks the status of all active and completed workstreams (Tracks)
 
 ## Completed Tracks
 
+- [x] **Track: remove the model provider for search concept and remove the Model(mod) from the display of searching results**
+*Link: [./tracks/remove_model_provider_20260319/](./tracks/remove_model_provider_20260319/)*
+
 ## Track Template
 To start a new track, create a directory in `conductor/tracks/<track_id>/` and follow the standard track structure.
 - `index.md`: Track overview.
@@ -15,6 +18,3 @@ To start a new track, create a directory in `conductor/tracks/<track_id>/` and f
 - `metadata.json`: Track metadata.
 
 ---
-
-- [ ] **Track: remove the model provider for search concept and remove the Model(mod) from the display of searching results**
-*Link: [./tracks/remove_model_provider_20260319/](./tracks/remove_model_provider_20260319/)*

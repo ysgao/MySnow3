@@ -149,13 +149,6 @@
                 <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Environment/org-ihtsdo-mysnow-querysct_ui-SctEnvironmentProvider.instance"/>
             </file>
         </folder>
-        <folder name="Model">
-            <attr name="command" stringvalue="mod"/>
-            <attr name="position" intvalue="190"/>
-            <file name="org-ihtsdo-mysnow-querysct_ui-SctModelProvider.instance">
-                <attr name="displayName" bundlevalue="org.ihtsdo.mysnow.querysct_ui.Bundle#QuickSearch/Model/org-ihtsdo-mysnow-querysct_ui-SctModelProvider.instance"/>
-            </file>
-        </folder>
         <folder name="Physical">
             <attr name="command" stringvalue="phy"/>
             <attr name="position" intvalue="200"/>
