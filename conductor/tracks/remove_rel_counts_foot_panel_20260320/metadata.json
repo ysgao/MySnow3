@@ -1,0 +1,8 @@
+{
+  "track_id": "remove_rel_counts_foot_panel_20260320",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-03-20T10:00:00Z",
+  "updated_at": "2026-03-20T10:00:00Z",
+  "description": "remove the display of the number of relationships (ISA, non-IS A, descriptions) of the focus concept in hierarchy from the foot panel"
+}
