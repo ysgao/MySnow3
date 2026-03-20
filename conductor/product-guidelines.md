@@ -17,6 +17,7 @@
 ## 4. macOS Compatibility
 - **Assistive Technologies:** Keep `javax.accessibility.assistive_technologies` disabled to prevent AppKit deadlocks.
 - **Launcher Config:** Ensure `jdkhome` is correctly set in `mysnow3.conf` during the build process.
+- **File Watchers:** Disable native file watchers (like JNA-based FSEvents in Neo4j) to prevent memory protection crashes on ARM64 when the application is idle.
 
 ## 5. Coding Standards
 - **Error Handling:** Avoid silent failures. Log exceptions with enough context to diagnose data-related issues.
