@@ -48,6 +48,11 @@ public final class EmbeddedDbManager {
     private static void applyDefaultTxLogSettings(DatabaseManagementServiceBuilder builder) {
         builder.setConfig(GraphDatabaseSettings.keep_logical_logs, DEFAULT_TX_LOG_RETENTION_POLICY);
         builder.setConfig(GraphDatabaseSettings.logical_log_rotation_threshold, DEFAULT_TX_LOG_ROTATION_THRESHOLD_BYTES);
+        
+        // macOS Efficiency & Stability Settings
+        builder.setConfig(GraphDatabaseSettings.filewatcher_enabled, false);
+        builder.setConfig(GraphDatabaseSettings.udc_enabled, false);
+        builder.setConfig(GraphDatabaseSettings.pagecache_warmup_enabled, false);
     }
 
     public synchronized DatabaseManagementService getManagementService() {

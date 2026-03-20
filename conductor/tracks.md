@@ -16,7 +16,7 @@ To start a new track, create a directory in `conductor/tracks/<track_id>/` and f
 
 ---
 
-- [ ] **Track: The application closed unexpectly when it was open but not actively used.**
+- [x] **Track: The application closed unexpectly when it was open but not actively used.**
 *Link: [./tracks/fix_macos_crash_20260320/](./tracks/fix_macos_crash_20260320/)*
 
 ---
