@@ -1,17 +1,17 @@
 # Implementation Plan: Remove Relationship Counts from Bottom/Foot Panel
 
 ## Phase 1: Investigation
-- [ ] Task: Locate UI Component
-    - [ ] Search the codebase for keywords like "ISA", "relationships", "descriptions", and "foot" or "bottom" within UI-related classes.
-    - [ ] Identify the specific Java class and method responsible for rendering the bottom/foot panel information.
-- [ ] Task: Understand Data Flow
-    - [ ] Determine how the counts are currently retrieved and passed to the UI component.
-    - [ ] Identify the exact lines of code that format and display these counts.
+- [x] Task: Locate UI Component
+    - [x] Search the codebase for keywords like "ISA", "relationships", "descriptions", and "foot" or "bottom" within UI-related classes.
+    - [x] Identify the specific Java class and method responsible for rendering the bottom/foot panel information.
+- [x] Task: Understand Data Flow
+    - [x] Determine how the counts are currently retrieved and passed to the UI component.
+    - [x] Identify the exact lines of code that format and display these counts.
 
 ## Phase 2: Implementation
-- [ ] Task: Remove Display Logic
-    - [ ] Modify the identified UI class to remove or comment out the code that adds the count text to the panel.
-    - [ ] Ensure the panel layout remains intact (e.g., removing a label component but keeping the parent container).
+- [x] Task: Remove Display Logic
+    - [x] Modify the identified UI class to remove or comment out the code that adds the count text to the panel.
+    - [x] Ensure the panel layout remains intact (e.g., removing a label component but keeping the parent container).
 - [ ] Task: Clean Up Unused Data Retrieval (Optional)
     - [ ] If the data retrieval for these counts is computationally expensive and no longer used elsewhere, safely remove that logic as well.
 

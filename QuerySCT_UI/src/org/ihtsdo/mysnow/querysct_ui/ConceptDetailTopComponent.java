@@ -481,8 +481,8 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
             jTextField6.setEditable(false);
             jTextField7.setText(sctnode.getLookup().lookup(RootNode.class).getDescendantCount());
             jTextField7.setEditable(false);
-            String relSummary = querysct.getRelationshipSummary(sctnode.getLookup().lookup(RootNode.class).getSctNode());
-            StatusDisplayer.getDefault().setStatusText(relSummary);
+//            String relSummary = querysct.getRelationshipSummary(sctnode.getLookup().lookup(RootNode.class).getSctNode());
+//            StatusDisplayer.getDefault().setStatusText(relSummary);
             }
         }else{
 //            System.out.println("No RootNode selected. No action now.");
