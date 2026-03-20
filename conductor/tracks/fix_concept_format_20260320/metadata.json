@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_concept_format_20260320",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-03-20T11:45:00Z",
+  "updated_at": "2026-03-20T11:45:00Z",
+  "description": "Fix the incorrect format of concept ID and descriptions in various export and copy actions."
+}
