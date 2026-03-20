@@ -16,12 +16,12 @@
     - [ ] If the data retrieval for these counts is computationally expensive and no longer used elsewhere, safely remove that logic as well.
 
 ## Phase 3: Verification
-- [ ] Task: Manual UI Testing
-    - [ ] Build and run the application using `ant clean build` or `tools/build-mac-fixed.sh`.
-    - [ ] Navigate the hierarchy and select a concept.
-    - [ ] Verify that the bottom/foot panel no longer shows the counts.
-    - [ ] Verify that the panel structure is still visible.
-    - [ ] Ensure no UI exceptions are thrown during navigation.
-- [ ] Task: Test Suite Verification
-    - [ ] Run the existing unit tests to ensure no regressions were introduced by removing the logic.
-    - [ ] Fix any tests that were specifically asserting the presence of these counts.
+- [x] Task: Manual UI Testing
+    - [x] Build and run the application using `ant clean build` or `tools/build-mac-fixed.sh`.
+    - [x] Navigate the hierarchy and select a concept.
+    - [x] Verify that the bottom/foot panel no longer shows the counts.
+    - [x] Verify that the panel structure is still visible.
+    - [x] Ensure no UI exceptions are thrown during navigation.
+- [x] Task: Test Suite Verification
+    - [x] Run the existing unit tests to ensure no regressions were introduced by removing the logic.
+    - [x] Fix any tests that were specifically asserting the presence of these counts.
