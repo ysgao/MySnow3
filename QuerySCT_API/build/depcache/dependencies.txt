@@ -1,0 +1,3 @@
+||:org.ihtsdo.mysnow.querysct_api.QuerySCT
+org.ihtsdo.mysnow.querysct_api.QuerySCT
+java.lang.Object
