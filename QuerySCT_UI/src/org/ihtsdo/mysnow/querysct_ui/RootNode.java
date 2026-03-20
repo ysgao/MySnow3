@@ -115,7 +115,7 @@ public class RootNode extends AbstractNode {
     
     public String getSctIdFsn(){
         
-        return querysct.getSctID(sctnode) + "|" + querysct.getSctFSN(sctnode)+"|";
+        return querysct.getSctID(sctnode) + " |" + querysct.getSctFSN(sctnode)+"|";
         
     }
 

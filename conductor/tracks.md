@@ -16,7 +16,7 @@ To start a new track, create a directory in `conductor/tracks/<track_id>/` and f
 
 ---
 
-- [ ] **Track: Fix the incorrect format of concept ID and descriptions.**
+- [x] **Track: Fix the incorrect format of concept ID and descriptions.**
 *Link: [./tracks/fix_concept_format_20260320/](./tracks/fix_concept_format_20260320/)*
 
 ---

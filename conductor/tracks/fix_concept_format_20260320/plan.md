@@ -10,20 +10,20 @@ Standardize the formatting of SNOMED CT concepts (SCTID and FSN) across various 
 ## Implementation Steps
 
 ### Phase 1: Update UI/Clipboard Formatting
-- [ ] Task: Modify `getSctIdFsn()` in `RootNode.java`.
+- [x] Task: Modify `getSctIdFsn()` in `RootNode.java`.
     - Change return format from `ID|FSN|` (or similar) to `ID |FSN|`.
     - Ensure there is exactly one space before the first pipe.
 
 ### Phase 2: Update List Generation Formatting
-- [ ] Task: Modify `findDirectSuperNodes(long sctid)` in `QuerySCTimpl.java`.
+- [x] Task: Modify `findDirectSuperNodes(long sctid)` in `QuerySCTimpl.java`.
     - Change output format from `id+"|"+fsn` to `id+" |"+fsn+"|"`.
-- [ ] Task: Modify `findDirectSubNodes(long sctid)` in `QuerySCTimpl.java`.
+- [x] Task: Modify `findDirectSubNodes(long sctid)` in `QuerySCTimpl.java`.
     - Change output format from `id+"|"+fsn` to `id+" |"+fsn+"|"`.
-- [ ] Task: Modify `findAllSubNodes(long sctid)` in `QuerySCTimpl.java`.
+- [x] Task: Modify `findAllSubNodes(long sctid)` in `QuerySCTimpl.java`.
     - Change output format from `conceptid + "|" + conceptfsn` to `conceptid + " |" + conceptfsn + "|"`.
 
 ### Phase 3: Update Transitive Closure Table Formatting
-- [ ] Task: Modify `findISATCNodes(long sctid)` in `QuerySCTimpl.java`.
+- [x] Task: Modify `findISATCNodes(long sctid)` in `QuerySCTimpl.java`.
     - Retrieve FSN for both `myStartNode` and `myPath.endNode()`.
     - Format both columns as `id+" |"+fsn+"|"`.
     - Update the header if appropriate (though standard headers are usually `supertypeId` and `subtypeId`).

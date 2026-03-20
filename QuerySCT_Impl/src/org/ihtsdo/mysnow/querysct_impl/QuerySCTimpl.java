@@ -1587,7 +1587,7 @@ public class QuerySCTimpl implements QuerySCT {
             for (Path path : myTraverser){                  
                 String id = path.endNode().getProperty("sctid").toString();
                 String fsn = path.endNode().getProperty("fsn").toString();
-                writer.write(id+"|"+fsn+"\n");
+                writer.write(id+" |"+fsn+"|\n");
                   n = n+1;
               }
             writer.close();        
@@ -1625,7 +1625,7 @@ public class QuerySCTimpl implements QuerySCT {
         for(Path path: myTraverser){
             String id = path.endNode().getProperty("sctid").toString();
             String fsn = path.endNode().getProperty("fsn").toString();
-            writer.write(id+"|"+fsn+"\n");
+            writer.write(id+" |"+fsn+"|\n");
             n=n+1;
         }
         writer.close();
@@ -1840,7 +1840,7 @@ public class QuerySCTimpl implements QuerySCT {
                          
 //                   try{                           
 //                         writer.write(conceptid + "  " + conceptfsn + "\n");
-                    writer.write(conceptid + "|" + conceptfsn + "\n");
+                    writer.write(conceptid + " |" + conceptfsn + "|\n");
 //                    System.out.println(conceptid + "\t" + sctid + "\n");
                        n = n+1;
                     }
@@ -2398,11 +2398,15 @@ public class QuerySCTimpl implements QuerySCT {
 //             System.out.print("SubConcept" + "\t"+ "SuperConcept" + "\n");
              for (Path subPath : TcTraverser){
              Node myStartNode = subPath.endNode();
+             String startid = myStartNode.getProperty("sctid").toString();
+             String startfsn = myStartNode.getProperty("fsn").toString();
              Traverser myTraverser = getISATraverser(myStartNode);           
              
              for(Path myPath : myTraverser){
-                 String tc = myStartNode.getProperty("sctid").toString()  + "\t"
-                         + myPath.endNode().getProperty("sctid").toString()+ "\n";
+                 String endid = myPath.endNode().getProperty("sctid").toString();
+                 String endfsn = myPath.endNode().getProperty("fsn").toString();
+                 String tc = startid + " |" + startfsn + "|\t"
+                         + endid + " |" + endfsn + "|\n";
                  writer.write(tc);
 //                 System.out.print(tc);
                  n = n+1;
