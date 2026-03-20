@@ -6,6 +6,7 @@ MySnow3 is a specialized NetBeans Platform application designed for the visualiz
 ## Core Features
 - **Hierarchical Taxonomy Browsing:** An explorer window that provides a tree view of the SNOMED CT taxonomy, rooted at the top-level SNOMED CT concept (SCTID: 138875005).
 - **Concept Details:** A detailed view of SNOMED CT concepts, including:
+    - **Standardized Representation:** Consistent use of the `SCTID |FSN|` format for concept representation in copy and export actions.
     - Fully Specified Name (FSN).
     - Preferred Terms (PT) and Synonyms.
     - Text Definitions.
