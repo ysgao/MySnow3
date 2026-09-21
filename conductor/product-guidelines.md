@@ -21,4 +21,4 @@
 
 ## 5. Coding Standards
 - **Error Handling:** Avoid silent failures. Log exceptions with enough context to diagnose data-related issues.
-- **Documentation:** Maintain `readme.md` and this Conductor structure as the primary technical documentation.
+- **Documentation:** Maintain `README.md` and this Conductor structure as the primary technical documentation.

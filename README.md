@@ -1,6 +1,6 @@
 # MySnow3 Technical Specification
 
-Last updated: 2026-02-06
+Last updated: 2026-09-21
 
 ## Overview
 MySnow3 is a NetBeans Platform application for visualizing SNOMED CT terminology. It imports SNOMED CT RF2 data into an embedded Neo4j database and provides:
@@ -75,6 +75,57 @@ MySnow3 is a NetBeans Platform application for visualizing SNOMED CT terminology
 2. Target `fix-jdkhome` points `jdkhome` at the JDK that ran the build (`nbjdk.home`,
    defaulting to the Ant JVM). `tools/build-mac-fixed.sh` then rewrites it to `"jre"`
    in the arm64 bundle, which carries its own jlink runtime.
+3. The launcher reads two config files, in this order: the one inside the bundle, then
+   `<userdir>/etc/MySnow-2026.conf`. The second is read later, so anything set there wins.
+
+## Changing the UI Font Size
+The whole interface scales from a single launcher option, `--fontsize <points>`. The
+Explorer window takes its text size from the look and feel, and ConceptDetail re-derives
+its fonts from the look and feel after `initComponents()`, so both windows follow this one
+setting.
+
+The shipped default lives in `etc/app.conf` in this repository and is baked into the built
+app at packaging time, as the `default_options` line of
+`<app>/Contents/Resources/MySnow-2026/etc/MySnow-2026.conf`. The DMG installs the bundle as
+`MySnow-2026-arm64.app`, but everything inside it is named `MySnow-2026`:
+
+```sh
+default_options="--branding mysnow2026 --fontsize 14"
+```
+
+To change it in an already-released `.app`, use whichever of these suits:
+
+1. **Per user, survives replacing the app (recommended).** Create
+   `~/Library/Application Support/MySnow-2026/dev/etc/MySnow-2026.conf` and put the whole
+   option line in it — the assignment replaces the bundle's value outright, so keep
+   `--branding mysnow2026` or the app loses its branding:
+
+   ```sh
+   default_options="--branding mysnow2026 --fontsize 18"
+   ```
+
+   The `dev` element of that path is the launcher's `default_userdir`; confirm it from the
+   `default_userdir` line of the bundle's config if it ever changes.
+
+2. **Edit the app bundle.** Change, or add, `--fontsize <points>` in the `default_options`
+   line of
+
+   ```
+   /Applications/MySnow-2026-arm64.app/Contents/Resources/MySnow-2026/etc/MySnow-2026.conf
+   ```
+
+   The bundle is not code signed, so editing it in place breaks nothing, but the change is
+   lost whenever the app is reinstalled or rebuilt.
+
+3. **One run only.** Launch from a terminal and pass the option through:
+
+   ```sh
+   /Applications/MySnow-2026-arm64.app/Contents/MacOS/MySnow-2026 --fontsize 18
+   ```
+
+Restart the app for a config change to take effect. Removing `--fontsize` altogether falls
+back to the look and feel's own default size. To change the default that ships with every
+build instead, edit `etc/app.conf` in this repository and rebuild.
 
 ## Neo4j Integration
 1. Embedded DB uses `DatabaseManagementService` (Neo4j 5.x API).

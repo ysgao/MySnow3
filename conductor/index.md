@@ -10,5 +10,5 @@ Welcome to the Gemini Conductor for the MySnow3 project. This environment provid
 - **[Tracks Registry](./tracks.md):** Current workstreams and historical progress.
 
 ## Project Resources
-- [README](../readme.md): The project's root readme file.
+- [README](../README.md): The project's root readme file.
 - [Issue Log](../IssueLogGemini.txt): Historical record of major fixes and investigations.
