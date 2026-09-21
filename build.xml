@@ -45,7 +45,27 @@
         <echo message="Ensured jdkhome points to ${nbjdk.home} in launcher and dist configs (if present)."/>
     </target>
 
-    <target name="build-mac-fixed" depends="build-mac,fix-jdkhome"
+    <target name="clean-stale-branding" depends="-init"
+            description="Remove branded locale JARs left over from an earlier branding token.">
+        <!-- The <branding> task writes <jar>_${branding.token}.jar but never removes
+             the output of a previous token, so after the token was corrected from
+             mysnow3026 to mysnow2026 the old files lingered and were packaged next to
+             the new ones. Everything under the application cluster's locale/
+             directories is branding output, so anything not carrying the current
+             token is stale. -->
+        <delete>
+            <fileset dir="${cluster}"
+                     includes="**/locale/*.jar"
+                     excludes="**/locale/*_${branding.token}.jar"
+                     erroronmissingdir="false"/>
+            <fileset dir="${dist.dir}"
+                     includes="**/Resources/${app.name}/${app.name}/**/locale/*.jar"
+                     excludes="**/locale/*_${branding.token}.jar"
+                     erroronmissingdir="false"/>
+        </delete>
+    </target>
+
+    <target name="build-mac-fixed" depends="clean-stale-branding,build-mac,fix-jdkhome"
             description="Build mac app bundle and force jdkhome to NetBeans JDK"/>
 
     <target name="build-mac-dmg" depends="build-mac-fixed"
