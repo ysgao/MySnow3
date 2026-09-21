@@ -1,34 +1,116 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fetches the NetBeans Platform this suite builds against.
+
+  build-impl.xml runs this file on every Ant invocation, before it looks for the build
+  harness, so a clean checkout downloads the platform from the official Apache NetBeans
+  distribution on its first build and no NetBeans binaries need to live in VCS. The
+  release is chosen by netbeans.version in nbproject/platform.properties.
+
+  Run it on its own to pre-fetch the platform without building:  ant -f nbproject/platform.xml
+-->
 <project name="platform" default="download" basedir="..">
-    <condition property="download.required">
-        <and>
-            <not>
-                <available file="${harness.dir}/suite.xml"/>
-            </not>
-            <isset property="bootstrap.url"/>
-            <isset property="autoupdate.catalog.url"/>
-        </and>
+
+    <property file="nbproject/platform.properties"/>
+    <property file="nbproject/project.properties"/>
+
+    <!-- Defaults for a standalone run; inherited from the suite build otherwise. -->
+    <property name="nbplatform.active.dir" location="${nbplatform.default.netbeans.dest.dir}"/>
+    <property name="harness.dir" location="${nbplatform.default.harness.dir}"/>
+
+    <property name="netbeans.download.dir" location="${basedir}/nbplatform/download"/>
+    <property name="netbeans.zip" location="${netbeans.download.dir}/netbeans-${netbeans.version}-bin.zip"/>
+    <!-- The mirror carries only the current release; the archive carries every release. -->
+    <property name="netbeans.mirror.url" value="https://dlcdn.apache.org/netbeans/netbeans/${netbeans.version}/netbeans-${netbeans.version}-bin.zip"/>
+    <property name="netbeans.archive.url" value="https://archive.apache.org/dist/netbeans/netbeans/${netbeans.version}/netbeans-${netbeans.version}-bin.zip"/>
+
+    <condition property="platform.present">
+        <available file="${harness.dir}/suite.xml"/>
     </condition>
-    <target name="download" if="download.required">
-        <mkdir dir="${harness.dir}"/>
-        <pathconvert pathsep="|" property="download.clusters">
-            <mapper type="flatten"/>
-            <path path="${cluster.path}"/>
-        </pathconvert>
-        <property name="disabled.modules" value=""/>
-        <pathconvert property="module.includes" pathsep="">
-            <mapper type="glob" from="${basedir}${file.separator}*" to="(?!^\Q*\E$)"/>
-            <path>
-                <filelist files="${disabled.modules}" dir="."/>
-            </path>
-        </pathconvert>
-        <echo message="Downloading clusters ${download.clusters}"/>
-        <property name="tasks.jar" location="${java.io.tmpdir}/tasks.jar"/>
-        <get src="${bootstrap.url}" dest="${tasks.jar}" usetimestamp="true" verbose="true"/>
-        <taskdef name="autoupdate" classname="org.netbeans.nbbuild.AutoUpdate" classpath="${tasks.jar}"/>
-        <autoupdate installdir="${nbplatform.active.dir}" updatecenter="${autoupdate.catalog.url}">
-            <modules includes="${module.includes}.*" clusters="${download.clusters}"/>
-            <modules includes="org[.]netbeans[.]modules[.]apisupport[.]harness" clusters="harness"/>
-        </autoupdate>
+
+    <target name="download" depends="-fetch,-verify,-unpack,-write-module-platform"
+            description="Download and unpack the Apache NetBeans Platform if it is not present yet."/>
+
+    <target name="-fetch" unless="platform.present">
+        <fail unless="netbeans.version"
+              message="netbeans.version is not set. Define it in nbproject/platform.properties."/>
+        <condition property="netbeans.url" value="${netbeans.mirror.url}" else="${netbeans.archive.url}">
+            <resourceexists>
+                <url url="${netbeans.mirror.url}"/>
+            </resourceexists>
+        </condition>
+        <echo message="NetBeans Platform ${netbeans.version} not found at ${nbplatform.active.dir}."/>
+        <echo message="Downloading ${netbeans.url} (about 500 MB, once per release)."/>
+        <mkdir dir="${netbeans.download.dir}"/>
+        <get src="${netbeans.url}" dest="${netbeans.zip}" usetimestamp="true" verbose="true" retries="3"/>
+        <get src="${netbeans.url}.sha512" dest="${netbeans.zip}.sha512" usetimestamp="true" retries="3"/>
     </target>
+
+    <target name="-verify" unless="platform.present">
+        <!-- Apache publishes "<hex>  ./netbeans-<version>-bin.zip". -->
+        <loadfile property="netbeans.sha512.expected" srcFile="${netbeans.zip}.sha512">
+            <filterchain>
+                <tokenfilter>
+                    <replaceregex pattern="^\s*([0-9a-fA-F]+).*$" replace="\1"/>
+                </tokenfilter>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+        <checksum file="${netbeans.zip}" algorithm="SHA-512"
+                  property="${netbeans.sha512.expected}" verifyproperty="netbeans.zip.verified"/>
+        <fail message="SHA-512 mismatch for ${netbeans.zip}. Delete it and build again.">
+            <condition>
+                <not><istrue value="${netbeans.zip.verified}"/></not>
+            </condition>
+        </fail>
+        <echo message="SHA-512 verified against the Apache checksum."/>
+    </target>
+
+    <target name="-unpack" unless="platform.present">
+        <!-- The suite builds against the platform cluster; the harness drives the build. -->
+        <mkdir dir="${nbplatform.active.dir}"/>
+        <unzip src="${netbeans.zip}" dest="${nbplatform.active.dir}">
+            <patternset>
+                <include name="netbeans/platform/**"/>
+                <include name="netbeans/harness/**"/>
+            </patternset>
+            <mapper type="glob" from="netbeans/*" to="*"/>
+        </unzip>
+        <!-- <unzip> drops unix permissions. -->
+        <chmod perm="+x">
+            <fileset dir="${nbplatform.active.dir}">
+                <include name="**/bin/*"/>
+                <include name="platform/lib/nbexec*"/>
+                <include name="**/*.sh"/>
+            </fileset>
+        </chmod>
+        <fail message="Unpacked ${netbeans.zip} but ${harness.dir}/suite.xml is still missing.">
+            <condition>
+                <not><available file="${harness.dir}/suite.xml"/></not>
+            </condition>
+        </fail>
+        <echo message="NetBeans Platform ${netbeans.version} installed at ${nbplatform.active.dir}."/>
+    </target>
+
+    <!--
+      The suite builds its modules with <subant inheritall="false">, so each module
+      resolves the platform on its own from nbproject/private/platform-private.properties
+      (the file the IDE writes for the same purpose). Regenerate it for every module on
+      every build so the modules always point at the platform this suite just resolved.
+    -->
+    <target name="-write-module-platform">
+        <subant target="-platform-private" genericantfile="${basedir}/nbproject/platform.xml"
+                buildpath="${modules}" inheritall="true"/>
+    </target>
+
+    <!-- Runs with basedir set to a module directory. -->
+    <target name="-platform-private">
+        <mkdir dir="${basedir}/nbproject/private"/>
+        <propertyfile file="${basedir}/nbproject/private/platform-private.properties"
+                      comment="Generated by nbproject/platform.xml - do not edit, do not commit.">
+            <entry key="nbplatform.default.netbeans.dest.dir" value="${nbplatform.active.dir}"/>
+            <entry key="nbplatform.default.harness.dir" value="${harness.dir}"/>
+        </propertyfile>
+    </target>
+
 </project>

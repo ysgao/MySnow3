@@ -20,6 +20,11 @@
         </exec>
     </target>
 
+    <target name="download-platform"
+            description="Download the Apache NetBeans Platform if it is not present yet (runs automatically before every build).">
+        <ant antfile="nbproject/platform.xml"/>
+    </target>
+
     <target name="fix-jdkhome-launcher" if="launcher.conf.exists">
         <replaceregexp file="${build.launcher.dir}/etc/${app.name}.conf"
                        match="^#?jdkhome=.*$"
@@ -35,6 +40,10 @@
     </target>
 
     <target name="-init-fix-jdkhome" depends="-init">
+        <!-- nbjdk.home is only set when an explicit Java platform is configured. It
+             normally is not, so the build follows JAVA_HOME and the launcher should
+             point at that same JDK. -->
+        <property name="nbjdk.home" location="${java.home}"/>
         <property name="build.launcher.dir" location="${suite.build.dir}/launcher"/>
         <available file="${suite.build.dir}/launcher/etc/${app.name}.conf" property="launcher.conf.exists"/>
         <available file="${dist.dir}/${app.name}.app/Contents/Resources/${app.name}/etc/${app.name}.conf" property="dist.conf.exists"/>

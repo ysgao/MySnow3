@@ -9,8 +9,12 @@ MySnow3 is a NetBeans Platform application for visualizing SNOMED CT terminology
 3. QuickSearch across multiple SNOMED CT sub-hierarchies.
 
 ## Platform & Runtime
-1. NetBeans Platform: bundled from `/Applications/Apache NetBeans.app`.
-2. Java: JDK 25 from `/Applications/Apache NetBeans.app/Contents/Home`.
+1. NetBeans Platform: a build dependency, not a checked-in binary. The build downloads
+   it from the official Apache NetBeans distribution on first use — no NetBeans
+   installation is required. Release is pinned by `netbeans.version` in
+   `nbproject/platform.properties` (currently 31).
+2. Java: whichever JDK runs Ant. Set `JAVA_HOME` to choose one; JDK 21 or newer.
+   Nothing in the build hardcodes a JDK path.
 3. Neo4j: embedded, based on Neo4j Community 5.26.21.
 
 ## Repository Structure
@@ -35,12 +39,32 @@ MySnow3 is a NetBeans Platform application for visualizing SNOMED CT terminology
 2. Mac app bundle: `ant build-mac-fixed`.
 3. Clean + Mac bundle: `ant build-mac-fixed-clean`.
 4. DMG: `hdiutil create -ov -fs HFS+ -volname mysnow3 -srcfolder dist/mysnow3.app dist/mysnow3.dmg`.
-5. Wrapper script: `tools/build-mac-fixed.sh` sets JDK 25 and runs `ant build-mac-fixed`.
+5. Wrapper script: `tools/build-mac-fixed.sh` builds the app bundle, jlinks a runtime
+   into it, and creates the DMG. It uses `JAVA_HOME`, falling back to
+   `/usr/libexec/java_home`; `JLINK_JDK_ARM64` overrides the JDK used for jlink.
+6. GraalVM native image (experimental): `tools/build-mac-native.sh`, with `GRAALVM_HOME`
+   pointing at a GraalVM installation.
+
+## NetBeans Platform Dependency
+1. The platform is fetched by `nbproject/platform.xml`, which `nbproject/build-impl.xml`
+   runs before it looks for the build harness. Nothing extra to invoke — any `ant` target
+   triggers it if the platform is missing.
+2. Source: `https://dlcdn.apache.org/netbeans/netbeans/<version>/netbeans-<version>-bin.zip`,
+   falling back to `https://archive.apache.org/dist/...` for superseded releases. The
+   download is checked against the Apache-published SHA-512 before being unpacked.
+3. Only the `platform` and `harness` clusters are extracted, into
+   `nbplatform/<version>/`. The zip is cached in `nbplatform/download/`. Both are
+   git-ignored and survive `ant clean`, so the download happens once per release.
+4. To move to another release, change `netbeans.version` in `nbproject/platform.properties`.
+   To pre-fetch without building: `ant download-platform`.
+5. To build against a local NetBeans installation instead, pass its paths explicitly:
+   `ant -Dnbplatform.default.netbeans.dest.dir=<netbeans> -Dnbplatform.default.harness.dir=<netbeans>/harness ...`
 
 ## NetBeans Launcher Configuration
 1. Launcher config file: `dist/mysnow3.app/Contents/Resources/mysnow3/etc/mysnow3.conf`.
-2. `jdkhome` is forced to `/Applications/Apache NetBeans.app/Contents/Home` for JDK 25.
-3. Target `fix-jdkhome` updates the launcher config after build.
+2. Target `fix-jdkhome` points `jdkhome` at the JDK that ran the build (`nbjdk.home`,
+   defaulting to the Ant JVM). `tools/build-mac-fixed.sh` then rewrites it to `"jre"`
+   in the arm64 bundle, which carries its own jlink runtime.
 
 ## Neo4j Integration
 1. Embedded DB uses `DatabaseManagementService` (Neo4j 5.x API).

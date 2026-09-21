@@ -1,8 +1,11 @@
 # Workflow: MySnow3
 
 ## Development Environment Setup
-1. **JDK 25:** Ensure JDK 25 is installed and accessible (Default: `/Applications/Apache NetBeans.app/Contents/Home`).
-2. **NetBeans:** Apache NetBeans IDE should be used for development.
+1. **JDK:** Any JDK 21 or newer. Set `JAVA_HOME` to pick one; the build uses whichever
+   JDK runs Ant and hardcodes no path.
+2. **NetBeans Platform:** downloaded automatically by the build from the official Apache
+   distribution (see `nbproject/platform.xml`). No NetBeans installation is needed to build.
+3. **NetBeans IDE:** optional, for development.
 
 ## Build Processes
 - **Clean and Build:**

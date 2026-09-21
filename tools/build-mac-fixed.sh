@@ -1,7 +1,15 @@
 #!/bin/sh
 set -e
 
-JAVA_HOME="/Applications/Apache NetBeans.app/Contents/Home"
+# JDK for the build. Set JAVA_HOME to pick one; otherwise ask macOS for its default.
+# The NetBeans Platform itself is downloaded by the build (see nbproject/platform.xml).
+if [ -z "$JAVA_HOME" ] && [ -x /usr/libexec/java_home ]; then
+  JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null || true)"
+fi
+if [ -z "$JAVA_HOME" ] || [ ! -x "$JAVA_HOME/bin/java" ]; then
+  echo "ERROR: No JDK found. Set JAVA_HOME to a JDK 21 or newer installation." >&2
+  exit 1
+fi
 export JAVA_HOME
 export PATH="${JAVA_HOME}/bin:${PATH}"
 
@@ -9,8 +17,8 @@ APP_NAME="MySnow-2026"
 BASE_APP="dist/${APP_NAME}.app"
 ARM_APP="dist/${APP_NAME}-arm64.app"
 
-# GraalVM JDK used for jlink runtime creation (must include jmods/)
-JLINK_JDK_ARM64="${JLINK_JDK_ARM64:-/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home}"
+# JDK used for the jlink runtime bundled into the app (must include jmods/).
+JLINK_JDK_ARM64="${JLINK_JDK_ARM64:-$JAVA_HOME}"
 
 ant build-mac-fixed "$@"
 
