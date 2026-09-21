@@ -3,9 +3,22 @@
   Fetches the NetBeans Platform this suite builds against.
 
   build-impl.xml runs this file on every Ant invocation, before it looks for the build
-  harness, so a clean checkout downloads the platform from the official Apache NetBeans
+  harness, so a clean checkout obtains the platform from the official Apache NetBeans
   distribution on its first build and no NetBeans binaries need to live in VCS. The
   release is chosen by netbeans.version in nbproject/platform.properties.
+
+  Apache stopped publishing a platform-only download after release 15, so the platform
+  now ships only inside netbeans-<version>-bin.zip (~500 MB) - of which the platform and
+  harness clusters are about 32 MB. Two ways to get them:
+
+    partial (default)  tools/fetch-platform.py pulls just those clusters' byte ranges
+                       out of the remote zip. ~32 MB; each entry CRC-32 checked.
+    full               downloads the whole zip and checks it against the SHA-512 Apache
+                       publishes. Slower, but verifies the release as a whole.
+                       ant -Dplatform.download.mode=full
+
+  Partial mode falls back to full automatically if it cannot run (no python3, for
+  instance), so the build works either way.
 
   Run it on its own to pre-fetch the platform without building:  ant -f nbproject/platform.xml
 -->
@@ -18,20 +31,34 @@
     <property name="nbplatform.active.dir" location="${nbplatform.default.netbeans.dest.dir}"/>
     <property name="harness.dir" location="${nbplatform.default.harness.dir}"/>
 
+    <property name="platform.download.mode" value="partial"/>
     <property name="netbeans.download.dir" location="${basedir}/nbplatform/download"/>
     <property name="netbeans.zip" location="${netbeans.download.dir}/netbeans-${netbeans.version}-bin.zip"/>
     <!-- The mirror carries only the current release; the archive carries every release. -->
     <property name="netbeans.mirror.url" value="https://dlcdn.apache.org/netbeans/netbeans/${netbeans.version}/netbeans-${netbeans.version}-bin.zip"/>
     <property name="netbeans.archive.url" value="https://archive.apache.org/dist/netbeans/netbeans/${netbeans.version}/netbeans-${netbeans.version}-bin.zip"/>
 
+    <!-- The system interpreter has a working trust store; a python.org build may not. -->
+    <condition property="python.exe" value="/usr/bin/python3" else="python3">
+        <available file="/usr/bin/python3"/>
+    </condition>
+
     <condition property="platform.present">
         <available file="${harness.dir}/suite.xml"/>
     </condition>
 
-    <target name="download" depends="-fetch,-verify,-unpack,-write-module-platform"
-            description="Download and unpack the Apache NetBeans Platform if it is not present yet."/>
+    <condition property="do.partial">
+        <and>
+            <not><isset property="platform.present"/></not>
+            <equals arg1="${platform.download.mode}" arg2="partial"/>
+        </and>
+    </condition>
 
-    <target name="-fetch" unless="platform.present">
+    <target name="download"
+            depends="-fetch-partial,-took-partial,-fetch-full,-verify-full,-unpack-full,-check,-write-module-platform"
+            description="Obtain the Apache NetBeans Platform if it is not present yet."/>
+
+    <target name="-choose-url" unless="platform.present">
         <fail unless="netbeans.version"
               message="netbeans.version is not set. Define it in nbproject/platform.properties."/>
         <condition property="netbeans.url" value="${netbeans.mirror.url}" else="${netbeans.archive.url}">
@@ -40,13 +67,36 @@
             </resourceexists>
         </condition>
         <echo message="NetBeans Platform ${netbeans.version} not found at ${nbplatform.active.dir}."/>
-        <echo message="Downloading ${netbeans.url} (about 500 MB, once per release)."/>
+    </target>
+
+    <target name="-fetch-partial" depends="-choose-url" if="do.partial">
+        <echo message="Fetching the platform and harness clusters from ${netbeans.url}"/>
+        <mkdir dir="${nbplatform.active.dir}"/>
+        <!-- Failure here is not fatal: -fetch-full picks it up. -->
+        <exec executable="${python.exe}" failonerror="false" failifexecutionfails="false">
+            <arg value="${basedir}/tools/fetch-platform.py"/>
+            <arg value="${netbeans.url}"/>
+            <arg value="${nbplatform.active.dir}"/>
+        </exec>
+    </target>
+
+    <target name="-took-partial">
+        <condition property="platform.ready">
+            <or>
+                <isset property="platform.present"/>
+                <available file="${harness.dir}/suite.xml"/>
+            </or>
+        </condition>
+    </target>
+
+    <target name="-fetch-full" depends="-choose-url,-took-partial" unless="platform.ready">
+        <echo message="Downloading the full release ${netbeans.url} (about 500 MB, once per release)."/>
         <mkdir dir="${netbeans.download.dir}"/>
         <get src="${netbeans.url}" dest="${netbeans.zip}" usetimestamp="true" verbose="true" retries="3"/>
         <get src="${netbeans.url}.sha512" dest="${netbeans.zip}.sha512" usetimestamp="true" retries="3"/>
     </target>
 
-    <target name="-verify" unless="platform.present">
+    <target name="-verify-full" unless="platform.ready">
         <!-- Apache publishes "<hex>  ./netbeans-<version>-bin.zip". -->
         <loadfile property="netbeans.sha512.expected" srcFile="${netbeans.zip}.sha512">
             <filterchain>
@@ -66,8 +116,7 @@
         <echo message="SHA-512 verified against the Apache checksum."/>
     </target>
 
-    <target name="-unpack" unless="platform.present">
-        <!-- The suite builds against the platform cluster; the harness drives the build. -->
+    <target name="-unpack-full" unless="platform.ready">
         <mkdir dir="${nbplatform.active.dir}"/>
         <unzip src="${netbeans.zip}" dest="${nbplatform.active.dir}">
             <patternset>
@@ -84,7 +133,10 @@
                 <include name="**/*.sh"/>
             </fileset>
         </chmod>
-        <fail message="Unpacked ${netbeans.zip} but ${harness.dir}/suite.xml is still missing.">
+    </target>
+
+    <target name="-check" unless="platform.present">
+        <fail message="Could not obtain the NetBeans Platform: ${harness.dir}/suite.xml is missing.">
             <condition>
                 <not><available file="${harness.dir}/suite.xml"/></not>
             </condition>

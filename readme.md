@@ -50,14 +50,24 @@ MySnow3 is a NetBeans Platform application for visualizing SNOMED CT terminology
    runs before it looks for the build harness. Nothing extra to invoke — any `ant` target
    triggers it if the platform is missing.
 2. Source: `https://dlcdn.apache.org/netbeans/netbeans/<version>/netbeans-<version>-bin.zip`,
-   falling back to `https://archive.apache.org/dist/...` for superseded releases. The
-   download is checked against the Apache-published SHA-512 before being unpacked.
-3. Only the `platform` and `harness` clusters are extracted, into
-   `nbplatform/<version>/`. The zip is cached in `nbplatform/download/`. Both are
-   git-ignored and survive `ant clean`, so the download happens once per release.
-4. To move to another release, change `netbeans.version` in `nbproject/platform.properties`.
+   falling back to `https://archive.apache.org/dist/...` for superseded releases. Apache
+   stopped publishing a platform-only download after release 15, so this full release zip
+   is the only official source for a current release.
+3. Two ways to get the clusters out of it, selected by `platform.download.mode`:
+   - `partial` (default) — `tools/fetch-platform.py` reads the archive's central directory
+     over HTTP range requests and pulls down only the byte ranges holding the `platform`
+     and `harness` clusters: **about 32 MB instead of ~500 MB**. Each extracted entry is
+     CRC-32 checked against the archive's own directory. Needs `python3` (the build prefers
+     `/usr/bin/python3`, whose trust store works out of the box).
+   - `full` — `ant -Dplatform.download.mode=full` downloads the whole zip and verifies it
+     against the SHA-512 Apache publishes, which covers the release as a whole. Use this
+     when you want that check; it is also what runs automatically if partial mode cannot.
+4. Clusters land in `nbplatform/<version>/`; `full` mode also caches the zip in
+   `nbplatform/download/`. Both are git-ignored and sit outside `build/`, so they survive
+   `ant clean` and the download happens once per release.
+5. To move to another release, change `netbeans.version` in `nbproject/platform.properties`.
    To pre-fetch without building: `ant download-platform`.
-5. To build against a local NetBeans installation instead, pass its paths explicitly:
+6. To build against a local NetBeans installation instead, pass its paths explicitly:
    `ant -Dnbplatform.default.netbeans.dest.dir=<netbeans> -Dnbplatform.default.harness.dir=<netbeans>/harness ...`
 
 ## NetBeans Launcher Configuration
