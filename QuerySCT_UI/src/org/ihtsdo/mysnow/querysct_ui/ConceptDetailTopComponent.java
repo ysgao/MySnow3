@@ -4,7 +4,10 @@
  */
 package org.ihtsdo.mysnow.querysct_ui;
 
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,8 +18,12 @@ import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import org.ihtsdo.mysnow.querysct_api.QuerySCT;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -58,10 +65,17 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
     private ActionMap map;
     private final QuerySCT querysct = Lookup.getDefault().lookup(QuerySCT.class);
     private final ImageIcon icon = new ImageIcon("org/ihtsdo/mysnow/querysct_ui/term.png");
+    /** Used only if the look and feel reports no default font. */
+    private static final float DEFAULT_FONT_SIZE = 12f;
     JScrollPane pane;
 
     public ConceptDetailTopComponent() {
         initComponents();
+        // The form editor pins a concrete point size on some fields and on the
+        // panel titles. Re-derive every size from the look and feel so this
+        // window follows the configured UI font size (--fontsize in
+        // MySnow-2026.conf), exactly as the Explorer window already does.
+        applyConfiguredFontSize(this);
         setName(Bundle.CTL_ConceptDetailTopComponent());
         setToolTipText(Bundle.HINT_ConceptDetailTopComponent());
 //        pane = new JScrollPane();
@@ -701,6 +715,46 @@ public final class ConceptDetailTopComponent extends TopComponent implements Loo
             if(s!=null){
                 jTextArea2.append(s);
                 jTextArea2.append("\n");
+            }
+        }
+    }
+
+    /**
+     * Point size the user interface is configured to use, as set by the
+     * --fontsize launcher option and applied by the look and feel.
+     */
+    private static float configuredFontSize() {
+        Font configured = UIManager.getFont("Label.font");
+        return configured == null ? DEFAULT_FONT_SIZE : configured.getSize2D();
+    }
+
+    /**
+     * Resizes {@code component} and everything below it to the configured font
+     * size, keeping each font's family and style. Titled borders are not
+     * components, so their title fonts are handled explicitly.
+     */
+    private static void applyConfiguredFontSize(Component component) {
+        applyFontSize(component, configuredFontSize());
+    }
+
+    private static void applyFontSize(Component component, float size) {
+        Font font = component.getFont();
+        if (font != null && font.getSize2D() != size) {
+            component.setFont(font.deriveFont(size));
+        }
+        if (component instanceof JComponent) {
+            Border border = ((JComponent) component).getBorder();
+            if (border instanceof TitledBorder) {
+                TitledBorder titled = (TitledBorder) border;
+                Font titleFont = titled.getTitleFont();
+                if (titleFont != null && titleFont.getSize2D() != size) {
+                    titled.setTitleFont(titleFont.deriveFont(size));
+                }
+            }
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyFontSize(child, size);
             }
         }
     }
